@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     android:layout_width="match_parent"
+    android:padding="16dp"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_centerInParent="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:id="@+id/date_of_birth"
+            android:hint="@string/date_of_birth"
+            android:inputType="none"
+            android:focusableInTouchMode="false"
+            android:cursorVisible="false"
+
+            />
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:inputType="none"
+            android:focusableInTouchMode="false"
+            android:cursorVisible="false"
+            android:id="@+id/sex"
+            android:hint="@string/sex"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/register"
+            android:background="@color/colorPrimary"
+            android:textColor="@color/white"
+            android:id="@+id/registerBtn"/>
+
+    </LinearLayout>
+
+</RelativeLayout>
