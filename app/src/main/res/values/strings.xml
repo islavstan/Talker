@@ -5,6 +5,8 @@
     <string name="date_of_birth">Date of Birth</string>
     <string name="sex">Sex</string>
     <string name="register">Register</string>
+    <string name="blank_fields">fields cannot be empty</string>
+    <string name="registration_success">Registration success</string>
 
     <!--main screen-->
     <string name="talk_to_level_1">Talk to Level-1 Speaker</string>
@@ -20,8 +22,7 @@
     <string name="male">Male</string>
     <string name="female">Female</string>
 
-    <string-array
-        name="sex_array">
+    <string-array name="sex_array">
         <item>Male</item>
         <item>Female</item>
     </string-array>

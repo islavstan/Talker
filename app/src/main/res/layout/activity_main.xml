@@ -4,7 +4,7 @@
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-   android:padding="16dp"
+    android:padding="16dp"
     tools:context="com.islavstan.talker.main.MainActivity">
 
     <LinearLayout
@@ -14,34 +14,39 @@
         android:orientation="vertical">
 
         <Button
+            android:id="@+id/level1Btn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/talk_to_level_1"
-            android:id="@+id/level1Btn"/>
+            android:layout_marginBottom="16dp"
+            android:text="@string/talk_to_level_1" />
+
         <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/talk_to_level_2"
-        android:id="@+id/level2Btn"/>
-        <Button
+            android:id="@+id/level2Btn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/block_ads_in_application"
-            android:id="@+id/blockBtn"/>
+            android:layout_marginBottom="16dp"
+            android:text="@string/talk_to_level_2" />
 
         <Button
+            android:id="@+id/blockBtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/share_app"
-            android:id="@+id/shareBtn"/>
+            android:layout_marginBottom="16dp"
+            android:text="@string/block_ads_in_application" />
 
         <Button
+            android:id="@+id/shareBtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/talk_to_female"
-            android:id="@+id/femaleBtn"/>
+            android:layout_marginBottom="16dp"
+            android:text="@string/share_app" />
 
-
+        <Button
+            android:id="@+id/femaleBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="@string/talk_to_female" />
 
 
     </LinearLayout>

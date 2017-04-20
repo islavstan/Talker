@@ -1,6 +1,8 @@
 package com.islavstan.talker.registration;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -11,13 +13,32 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.islavstan.talker.R;
+import com.islavstan.talker.main.MainActivity;
 import com.islavstan.talker.utils.DatePicker;
+import com.islavstan.talker.utils.PreferenceHelper;
 
-public class RegistrationActivity extends AppCompatActivity implements View.OnClickListener {
+public class RegistrationActivity extends AppCompatActivity implements View.OnClickListener, RegistrationContract.View {
 
     private EditText birthET;
     private EditText sexET;
     private Button registerBtn;
+    PreferenceHelper preferenceHelper;
+    RegistrationPresenter presenter;
+
+
+
+    public static void startActivity(Context context, int flags) {
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.setFlags(flags);
+        context.startActivity(intent);
+    }
+
+    public static void startActivity(Context context) {
+        Intent intent = new Intent(context, MainActivity.class);
+        context.startActivity(intent);
+    }
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +53,10 @@ public class RegistrationActivity extends AppCompatActivity implements View.OnCl
         birthET = (EditText) findViewById(R.id.date_of_birth);
         sexET = (EditText) findViewById(R.id.sex);
         registerBtn = (Button) findViewById(R.id.registerBtn);
+        preferenceHelper = PreferenceHelper.getInstance();
+        preferenceHelper.init(getApplicationContext());
+        presenter = new RegistrationPresenter(this);
+
 
         registerBtn.setOnClickListener(this);
         sexET.setOnClickListener(this);
@@ -55,7 +80,13 @@ public class RegistrationActivity extends AppCompatActivity implements View.OnCl
     }
 
     private void registration() {
-
+        String date = birthET.getText().toString();
+        String sex = sexET.getText().toString();
+        if (date.equals("") || sex.equals("")) {
+            Toast.makeText(this, R.string.blank_fields, Toast.LENGTH_SHORT).show();
+        } else {
+            registration(sex, date, preferenceHelper);
+        }
     }
 
 
@@ -77,5 +108,23 @@ public class RegistrationActivity extends AppCompatActivity implements View.OnCl
     private void showDateDialog() {
         DialogFragment dateDialog = new DatePicker();
         dateDialog.show(getSupportFragmentManager(), "datePicker");
+    }
+
+    @Override
+    public void registration(String sex, String birthday, PreferenceHelper preferenceHelper) {
+            presenter.registration(sex, birthday, preferenceHelper);
+    }
+
+    @Override
+    public void onRegistrationSuccess() {
+        Toast.makeText(this, R.string.registration_success, Toast.LENGTH_SHORT).show();
+        MainActivity.startActivity(this, Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+
+    }
+
+    @Override
+    public void onRegistrationFailure(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }
