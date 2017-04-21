@@ -39,7 +39,8 @@ public class RegistrationInteractor implements RegistrationContract.Registration
             public void onSuccess(QBUser result, Bundle params) {
                 Log.d(TAG, "signUp success" + result.getLogin());
                 preferenceHelper.saveQbUser(result, sex);
-                signIn(result);
+                listener.onSuccess();
+               // signIn(result);
 
             }
 
@@ -73,7 +74,7 @@ public class RegistrationInteractor implements RegistrationContract.Registration
         char[] chars = "abcdefghijklmnopqrstuvwxyz".toCharArray();
         StringBuilder sb = new StringBuilder();
         Random random = new Random();
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
             char c = chars[random.nextInt(chars.length)];
             sb.append(c);
         }

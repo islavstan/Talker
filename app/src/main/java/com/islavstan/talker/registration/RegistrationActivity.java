@@ -1,5 +1,6 @@
 package com.islavstan.talker.registration;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -24,6 +25,7 @@ public class RegistrationActivity extends AppCompatActivity implements View.OnCl
     private Button registerBtn;
     PreferenceHelper preferenceHelper;
     RegistrationPresenter presenter;
+    private ProgressDialog mProgressDialog;
 
 
 
@@ -34,7 +36,7 @@ public class RegistrationActivity extends AppCompatActivity implements View.OnCl
     }
 
     public static void startActivity(Context context) {
-        Intent intent = new Intent(context, MainActivity.class);
+        Intent intent = new Intent(context, RegistrationActivity.class);
         context.startActivity(intent);
     }
 
@@ -56,7 +58,10 @@ public class RegistrationActivity extends AppCompatActivity implements View.OnCl
         preferenceHelper = PreferenceHelper.getInstance();
         preferenceHelper.init(getApplicationContext());
         presenter = new RegistrationPresenter(this);
-
+        mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setTitle(getString(R.string.loading));
+        mProgressDialog.setMessage(getString(R.string.please_wait));
+        mProgressDialog.setIndeterminate(true);
 
         registerBtn.setOnClickListener(this);
         sexET.setOnClickListener(this);
@@ -112,11 +117,13 @@ public class RegistrationActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void registration(String sex, String birthday, PreferenceHelper preferenceHelper) {
-            presenter.registration(sex, birthday, preferenceHelper);
+        mProgressDialog.show();
+        presenter.registration(sex, birthday, preferenceHelper);
     }
 
     @Override
     public void onRegistrationSuccess() {
+        mProgressDialog.dismiss();
         Toast.makeText(this, R.string.registration_success, Toast.LENGTH_SHORT).show();
         MainActivity.startActivity(this, Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
 
@@ -125,6 +132,7 @@ public class RegistrationActivity extends AppCompatActivity implements View.OnCl
 
     @Override
     public void onRegistrationFailure(String message) {
+        mProgressDialog.dismiss();
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }

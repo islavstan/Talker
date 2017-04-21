@@ -3,6 +3,7 @@ package com.islavstan.talker.splash;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.islavstan.talker.main.MainActivity;
 import com.islavstan.talker.registration.RegistrationActivity;

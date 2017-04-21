@@ -7,6 +7,9 @@
     <string name="register">Register</string>
     <string name="blank_fields">fields cannot be empty</string>
     <string name="registration_success">Registration success</string>
+    <string name="loading">Loading</string>
+    <string name="please_wait">Please wait</string>
+
 
     <!--main screen-->
     <string name="talk_to_level_1">Talk to Level-1 Speaker</string>
@@ -21,6 +24,12 @@
 
     <string name="male">Male</string>
     <string name="female">Female</string>
+
+
+    <string name="calling">Calling...</string>
+    <string name="income_call">Income call</string>
+
+
 
     <string-array name="sex_array">
         <item>Male</item>
