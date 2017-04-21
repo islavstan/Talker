@@ -19,7 +19,7 @@
     <string name="talk_to_female">Talk to Female Speaker</string>
 
     <!--  date picker-->
-    <string name="ok">Ok</string>
+    <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
 
     <string name="male">Male</string>
@@ -28,6 +28,9 @@
 
     <string name="calling">Calling...</string>
     <string name="income_call">Income call</string>
+    <string name="looking_for_an_opponent">Looking for an opponent...</string>
+
+    <string name="no_users_online">No users online, try later</string>
 
 
     <string-array name="sex_array">

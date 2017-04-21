@@ -126,7 +126,7 @@ public class AudioConversationFragment extends BaseConversationFragment implemen
 
     @Override
     public void onOpponentsListUpdated(ArrayList<QBUser> newUsers) {
-        super.onOpponentsListUpdated(newUsers);
+       // super.onOpponentsListUpdated(newUsers);
         // firstOpponentNameTextView.setText(opponents.get(0).getFullName());
         // otherOpponentsTextView.setText(getOtherOpponentsNames());
     }
