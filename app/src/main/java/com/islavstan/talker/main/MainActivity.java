@@ -8,13 +8,26 @@ import android.util.Log;
 
 import com.islavstan.talker.R;
 import com.islavstan.talker.call_functions.service.CallService;
+import com.islavstan.talker.utils.Constants;
 import com.islavstan.talker.utils.Consts;
 import com.islavstan.talker.utils.PreferenceHelper;
 import com.islavstan.talker.utils.WebRtcSessionManager;
+import com.quickblox.chat.QBRestChatService;
+import com.quickblox.chat.listeners.QBChatDialogParticipantListener;
+import com.quickblox.chat.model.QBChatDialog;
+import com.quickblox.chat.model.QBPresence;
+import com.quickblox.core.QBEntityCallback;
 import com.quickblox.core.QBEntityCallbackImpl;
 import com.quickblox.core.exception.QBResponseException;
+import com.quickblox.core.request.QBPagedRequestBuilder;
 import com.quickblox.users.QBUsers;
 import com.quickblox.users.model.QBUser;
+
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smackx.muc.DiscussionHistory;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,6 +37,10 @@ public class MainActivity extends AppCompatActivity {
     QBUser qbUser;
      WebRtcSessionManager webRtcSessionManager;
     boolean isRunForCall;
+
+    QBChatDialog groupChatDialog;
+
+    private QBChatDialogParticipantListener participantListener;
 
     public static void startActivity(Context context, int flags) {
         Intent intent = new Intent(context, MainActivity.class);
@@ -51,16 +68,26 @@ public class MainActivity extends AppCompatActivity {
         initFields();
         preferenceHelper = PreferenceHelper.getInstance();
         preferenceHelper.init(getApplicationContext());
-
         qbUser = preferenceHelper.getQbUser();
         if (qbUser != null) {
             CallService.start(MainActivity.this, qbUser);
             signIn(qbUser);
 
         }
+// слушатель онлайн юзеров
+        participantListener = new QBChatDialogParticipantListener() {
+            @Override
+            public void processPresence(String dialogId, QBPresence qbPresence) {
+
+                Log.d(TAG, "processPresence  dialog id = "+dialogId + " "+qbPresence.getType()+ qbPresence.getUserId() );
+
+            }
+        };
 
 
     }
+
+
 
 
     public void signIn(QBUser qbUser) {
@@ -68,6 +95,47 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(QBUser result, Bundle params) {
                 Log.d(TAG, "onSuccess signIn " + result.getLogin());
+
+
+
+                QBRestChatService.getChatDialogById(Constants.GROUP_DIALOG_ID).performAsync(
+                        new QBEntityCallback<QBChatDialog>() {
+                            @Override
+                            public void onSuccess(QBChatDialog dialog, Bundle params) {
+                               Log.d("stas", "getChatDialogById success" );
+                                //присоединяемся к чату
+                                groupChatDialog = dialog;
+                                groupChatDialog.addParticipantListener(participantListener);
+                                DiscussionHistory discussionHistory = new DiscussionHistory();
+                                discussionHistory.setMaxStanzas(0);
+                                groupChatDialog.join(discussionHistory, new QBEntityCallback() {
+                                    @Override
+                                    public void onSuccess(Object o, Bundle bundle) {
+                                        Log.d("stas", "join success" );
+                                        getOnlineUsers();
+                                    }
+
+                                    @Override
+                                    public void onError(QBResponseException e) {
+                                        Log.d(TAG, "error join  " + e.getMessage());
+                                    }
+                                });
+
+
+
+
+
+                            }
+
+                            @Override
+                            public void onError(QBResponseException responseException) {
+                                Log.d(TAG, "error getChatDialogById  " + responseException.getMessage());
+                            }
+                        });
+
+
+
+
 
             }
 
@@ -86,4 +154,24 @@ public class MainActivity extends AppCompatActivity {
         }
         webRtcSessionManager = WebRtcSessionManager.getInstance(getApplicationContext());
     }
+
+
+    private void getOnlineUsers(){
+        Collection<Integer> onlineUsers = null;
+        try {
+            onlineUsers = groupChatDialog.getOnlineUsers();
+            for(int i: onlineUsers){
+                Log.d("stas","onlineUser = "+i );
+            }
+
+        } catch (XMPPException e) {
+
+        }
+    }
+
+
+
+
+
+
 }

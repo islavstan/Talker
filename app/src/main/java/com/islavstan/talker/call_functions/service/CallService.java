@@ -103,6 +103,12 @@ public class CallService extends Service {
     }
 
     private void loginToChat(QBUser qbUser) {
+
+      /*  QBChatService.ConfigurationBuilder builder = new QBChatService.ConfigurationBuilder();
+        builder.setAutojoinEnabled(true);
+        QBChatService.setConfigurationBuilder(builder);*/
+
+
         chatService.login(qbUser, new QBEntityCallback<QBUser>() {
             @Override
             public void onSuccess(QBUser qbUser, Bundle bundle) {
