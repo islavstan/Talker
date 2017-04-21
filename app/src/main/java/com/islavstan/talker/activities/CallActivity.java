@@ -15,7 +15,13 @@ import android.widget.Toast;
 
 
 import com.islavstan.talker.R;
+import com.islavstan.talker.call_functions.fragments.AudioConversationFragment;
+import com.islavstan.talker.call_functions.fragments.BaseConversationFragment;
+import com.islavstan.talker.call_functions.fragments.ConversationFragmentCallbackListener;
 import com.islavstan.talker.call_functions.fragments.FragmentExecutor;
+import com.islavstan.talker.call_functions.fragments.IncomeCallFragment;
+import com.islavstan.talker.call_functions.fragments.IncomeCallFragmentCallbackListener;
+import com.islavstan.talker.call_functions.fragments.OnCallEventsController;
 import com.islavstan.talker.utils.Consts;
 import com.islavstan.talker.utils.RingtonePlayer;
 import com.islavstan.talker.utils.WebRtcSessionManager;
@@ -46,7 +52,7 @@ import java.util.Map;
 
 
 public class CallActivity extends AppCompatActivity  implements QBRTCClientSessionCallbacks, QBRTCSessionStateCallback, QBRTCSignalingCallback,
-        OnCallEventsController, IncomeCallFragmentCallbackListener, ConversationFragmentCallbackListener{
+        OnCallEventsController, IncomeCallFragmentCallbackListener, ConversationFragmentCallbackListener {
 
     private static final String TAG = CallActivity.class.getSimpleName();
 
@@ -636,12 +642,24 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
     }
 
     @Override
+    public void onSetVideoEnabled(boolean isNeedEnableCam) {
+
+    }
+
+    @Override
     public void onHangUpCurrentSession() {
         hangUpCurrentSession();
     }
 
+    @Override
+    public void onStartScreenSharing() {
 
+    }
 
+    @Override
+    public void onSwitchCamera(CameraVideoCapturer.CameraSwitchHandler cameraSwitchHandler) {
+
+    }
 
 
     @Override

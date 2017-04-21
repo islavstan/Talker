@@ -19,7 +19,6 @@
         android:layout_centerHorizontal="true"
         android:layout_gravity="center"
         android:layout_marginTop="8dp"
-        android:textColor="#FFFFFF"
         android:textSize="18sp"
         android:visibility="invisible" />
     <include layout="@layout/call_view_action_buttons_conversation_fragment" />

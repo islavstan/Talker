@@ -105,6 +105,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             signIn(qbUser);
 
         }
+
+
+
+        if (isRunForCall && webRtcSessionManager.getCurrentSession() != null) {
+            CallActivity.start(MainActivity.this, true);
+        }
+
+
+
 // слушатель онлайн юзеров
         participantListener = new QBChatDialogParticipantListener() {
             @Override
@@ -264,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void callToRandomUser() {
-
+     startCall(26660325);
 
     }
 
