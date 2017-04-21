@@ -17,9 +17,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 
+import com.islavstan.talker.Manifest;
 import com.islavstan.talker.R;
 import com.islavstan.talker.utils.RingtonePlayer;
 import com.islavstan.talker.utils.WebRtcSessionManager;
+import com.master.permissionhelper.PermissionHelper;
 import com.quickblox.chat.QBChatService;
 
 import com.quickblox.users.model.QBUser;
@@ -80,6 +82,27 @@ public class IncomeCallFragment extends Fragment implements Serializable, View.O
             initUI(view);
             initButtonsListener();
         }
+
+
+        PermissionHelper permissionHelper = new PermissionHelper(this, new String[]{Manifest.permission.RECORD_AUDIO}, 100);
+        permissionHelper.request(new PermissionHelper.PermissionCallback() {
+            @Override
+            public void onPermissionGranted() {
+                Log.d(TAG, "onPermissionGranted() called");
+
+            }
+
+            @Override
+            public void onPermissionDenied() {
+                Log.d(TAG, "onPermissionDenied() called");
+            }
+
+            @Override
+            public void onPermissionDeniedBySystem() {
+                Log.d(TAG, "onPermissionDeniedBySystem() called");
+            }
+        });
+
 
         ringtonePlayer = new RingtonePlayer(getActivity());
         return view;

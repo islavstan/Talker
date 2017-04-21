@@ -3,6 +3,7 @@ package com.islavstan.talker.main;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +11,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.islavstan.talker.Manifest;
 import com.islavstan.talker.R;
 import com.islavstan.talker.activities.CallActivity;
 import com.islavstan.talker.call_functions.service.CallService;
@@ -17,6 +19,8 @@ import com.islavstan.talker.utils.Constants;
 import com.islavstan.talker.utils.Consts;
 import com.islavstan.talker.utils.PreferenceHelper;
 import com.islavstan.talker.utils.WebRtcSessionManager;
+import com.master.permissionhelper.PermissionHelper;
+import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBRestChatService;
 import com.quickblox.chat.listeners.QBChatDialogParticipantListener;
 import com.quickblox.chat.model.QBChatDialog;
@@ -31,6 +35,7 @@ import com.quickblox.videochat.webrtc.QBRTCClient;
 import com.quickblox.videochat.webrtc.QBRTCSession;
 import com.quickblox.videochat.webrtc.QBRTCTypes;
 
+import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 
@@ -52,13 +57,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     QBChatDialog groupChatDialog;
 
-    private QBChatDialogParticipantListener participantListener;
-
 
     List<QBUser> allOnlineUsersList = new ArrayList<>();
 
-    boolean firstLaunching = true;
+
     private ProgressDialog mProgressDialog;
+    PermissionHelper permissionHelper;
 
 
     public static void startActivity(Context context, int flags) {
@@ -120,31 +124,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
 
-// слушатель онлайн юзеров
-        participantListener = new QBChatDialogParticipantListener() {
-            @Override
-            public void processPresence(String dialogId, QBPresence qbPresence) {
-
-                if (qbPresence.getType().toString().equals("offline")) {
-
-                    Log.d(TAG, "user with id " + qbPresence.getUserId() + " go offline");
-                    removeUserById(qbPresence.getUserId());
-
-                } else if (qbPresence.getType().toString().equals("online")) {
-                    if (qbPresence.getUserId() != qbUser.getId()) {
-                        Log.d(TAG, "user with id " + qbPresence.getUserId() + " go online");
-                        List<Integer> list = new ArrayList<>();
-                        list.add(qbPresence.getUserId());
-                        getRandomUser(list);
-                    }
-
-                }
-
-
-            }
-        };
-
-
     }
 
 
@@ -161,46 +140,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d("stas", "onPause");
+        if (groupChatDialog != null) {
+            try {
+                groupChatDialog.leave();
+                groupChatDialog = null;
+            } catch (XMPPException | SmackException.NotConnectedException e) {
+
+            }
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d("stas", "onStart");
+        if (groupChatDialog == null) {
+            getChatDialogById();
+        }
+
+
+    }
+
     public void signIn(QBUser qbUser) {
         QBUsers.signIn(qbUser).performAsync(new QBEntityCallbackImpl<QBUser>() {
             @Override
             public void onSuccess(QBUser result, Bundle params) {
                 Log.d(TAG, "onSuccess signIn " + result.getLogin());
 
-
+                getChatDialogById();
                 //получаю чат
-                QBRestChatService.getChatDialogById(Constants.GROUP_DIALOG_ID).performAsync(
-                        new QBEntityCallback<QBChatDialog>() {
-                            @Override
-                            public void onSuccess(QBChatDialog dialog, Bundle params) {
-                                Log.d("stas", "getChatDialogById success");
-                                //присоединяемся к чату
-                                groupChatDialog = dialog;
-                                // groupChatDialog.addParticipantListener(participantListener);
-                                DiscussionHistory discussionHistory = new DiscussionHistory();
-                                discussionHistory.setMaxStanzas(0);
-                                groupChatDialog.join(discussionHistory, new QBEntityCallback() {
-                                    @Override
-                                    public void onSuccess(Object o, Bundle bundle) {
-                                        Log.d("stas", "join success");
-                                        // getOnlineUsers();
-                                    }
-
-                                    @Override
-                                    public void onError(QBResponseException e) {
-                                        Log.d(TAG, "error join  " + e.getMessage());
-                                    }
-                                });
-
-
-                            }
-
-                            @Override
-                            public void onError(QBResponseException responseException) {
-                                Log.d(TAG, "error getChatDialogById  " + responseException.getMessage());
-                            }
-                        });
-
 
             }
 
@@ -210,6 +182,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             }
         });
+    }
+
+
+    private void getChatDialogById() {
+        QBRestChatService.getChatDialogById(Constants.GROUP_DIALOG_ID).performAsync(
+                new QBEntityCallback<QBChatDialog>() {
+                    @Override
+                    public void onSuccess(QBChatDialog dialog, Bundle params) {
+                        Log.d("stas", "getChatDialogById success");
+                        //присоединяемся к чату
+                        groupChatDialog = dialog;
+                        DiscussionHistory discussionHistory = new DiscussionHistory();
+                        discussionHistory.setMaxStanzas(0);
+                        groupChatDialog.join(discussionHistory, new QBEntityCallback() {
+                            @Override
+                            public void onSuccess(Object o, Bundle bundle) {
+                                Log.d("stas", "join success");
+
+                            }
+
+                            @Override
+                            public void onError(QBResponseException e) {
+                                Log.d(TAG, "error join  " + e.getMessage());
+                            }
+                        });
+
+
+                    }
+
+                    @Override
+                    public void onError(QBResponseException responseException) {
+                        Log.d(TAG, "error getChatDialogById  " + responseException.getMessage());
+                    }
+                });
+
+
     }
 
     private void initFields() {
@@ -226,159 +234,128 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Collection<Integer> onlineUsers = null;
         try {
             onlineUsers = groupChatDialog.getOnlineUsers();
-
-
-            for (int i : onlineUsers) {
-                Log.d("stas", "onlineUser = " + i);
-            }
-
         } catch (XMPPException e) {
 
         }
         return onlineUsers;
-
-
-
-      /*  if (onlineUsers != null) {
-            getRandomUser(onlineUsers);
-        }else {
-            groupChatDialog.addParticipantListener(participantListener);
-            firstLaunching = false;
-        }*/
     }
 
 
-    private void getRandomUser(Collection<Integer> onlineUsers) {
-        Log.d(TAG, " getRandomUser ");
-        QBPagedRequestBuilder pagedRequestBuilder = new QBPagedRequestBuilder();
-        pagedRequestBuilder.setPage(1);
-        pagedRequestBuilder.setPerPage(50);
+    private void getRandomUser(final Collection<Integer> onlineUsers, final int type) {
 
-        QBUsers.getUsersByIDs(onlineUsers, pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
+        permissionHelper = new PermissionHelper(this, new String[]{Manifest.permission.RECORD_AUDIO}, 100);
+        permissionHelper.request(new PermissionHelper.PermissionCallback() {
             @Override
-            public void onSuccess(ArrayList<QBUser> result, Bundle params) {
-                Log.d(TAG, " getRandomUser  success");
-                allOnlineUsersList.clear();
-                allOnlineUsersList.addAll(result);
-                removeUserById(qbUser.getId());
+            public void onPermissionGranted() {
+                Log.d(TAG, "onPermissionGranted() called");
 
-                if (allOnlineUsersList.size() > 0) {
-                    int min = 0;
-                    int max = allOnlineUsersList.size() - 1;
-                    int randomNum = min + (int) (Math.random() * ((max - min) + 1));
-                    Log.d(TAG, "max = " + max + " randomNum = " + randomNum + " allOnlineUsersList.size() = " + allOnlineUsersList.size());
-                    startCall(allOnlineUsersList.get(randomNum).getId());
+                Log.d(TAG, " getRandomUser ");
+                QBPagedRequestBuilder pagedRequestBuilder = new QBPagedRequestBuilder();
+                pagedRequestBuilder.setPage(1);
+                pagedRequestBuilder.setPerPage(50);
 
+                QBUsers.getUsersByIDs(onlineUsers, pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
+                    @Override
+                    public void onSuccess(ArrayList<QBUser> result, Bundle params) {
+                        Log.d(TAG, " getRandomUser  success");
 
-                } else
-                    Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
-                mProgressDialog.dismiss();
+                        switch (type) {
+                            case 1:
+                                allOnlineUsersList.clear();
+                                allOnlineUsersList.addAll(result);
+                                removeUserById(qbUser.getId());
 
-               /* if(firstLaunching) {
-                    removeUserById(qbUser.getId());
-                    groupChatDialog.addParticipantListener(participantListener);
-                    firstLaunching = false;
-                }*/
-
-            }
-
-            @Override
-            public void onError(QBResponseException responseException) {
-                Log.d(TAG, "error getRandomUser  " + responseException.getMessage());
-                mProgressDialog.dismiss();
-            }
-        });
-    }
+                                if (allOnlineUsersList.size() > 0) {
+                                    int min = 0;
+                                    int max = allOnlineUsersList.size() - 1;
+                                    int randomNum = min + (int) (Math.random() * ((max - min) + 1));
+                                    Log.d(TAG, "max = " + max + " randomNum = " + randomNum + " allOnlineUsersList.size() = " + allOnlineUsersList.size());
+                                    startCall(allOnlineUsersList.get(randomNum).getId());
 
 
-    private void getFemaleUser(Collection<Integer> onlineUsers) {
-        Log.d(TAG, " getFemaleUser ");
-        QBPagedRequestBuilder pagedRequestBuilder = new QBPagedRequestBuilder();
-        pagedRequestBuilder.setPage(1);
-        pagedRequestBuilder.setPerPage(50);
+                                } else
+                                    Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
+                                mProgressDialog.dismiss();
+                                break;
 
-        QBUsers.getUsersByIDs(onlineUsers, pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
-            @Override
-            public void onSuccess(ArrayList<QBUser> result, Bundle params) {
-                Log.d(TAG, " getRandomUser  success");
-                allOnlineUsersList.clear();
-                allOnlineUsersList.addAll(result);
-                removeUserById(qbUser.getId());
+                            case 2:
+                                allOnlineUsersList.clear();
+                                allOnlineUsersList.addAll(result);
+                                removeUserById(qbUser.getId());
+                                if (allOnlineUsersList.size() > 0) {
+                                    for (int i = 0; i < allOnlineUsersList.size(); i++) {
+                                        if (allOnlineUsersList.get(i).getTags().size() == 1) {
+                                            Log.d(TAG, "remove not level 2 users");
+                                            allOnlineUsersList.remove(i);
+                                        }
+                                    }
+                                    if (allOnlineUsersList.size() > 0) {
+                                        int min = 0;
+                                        int max = allOnlineUsersList.size() - 1;
+                                        int randomNum = min + (int) (Math.random() * ((max - min) + 1));
+                                        Log.d(TAG, "max = " + max + " randomNum = " + randomNum + " allOnlineUsersList.size() = " + allOnlineUsersList.size());
+                                        startCall(allOnlineUsersList.get(randomNum).getId());
+                                    } else
+                                        Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
+                                } else
+                                    Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
+                                mProgressDialog.dismiss();
 
-                if (allOnlineUsersList.size() > 0) {
-                    for (int i = 0; i < allOnlineUsersList.size(); i++) {
-                        if (allOnlineUsersList.get(i).getTags().get(0).equals("Male")) {
-                            Log.d(TAG, "remove Male");
-                            allOnlineUsersList.remove(i);
+                                break;
+
+                            case 3:
+                                allOnlineUsersList.clear();
+                                allOnlineUsersList.addAll(result);
+                                removeUserById(qbUser.getId());
+
+                                if (allOnlineUsersList.size() > 0) {
+                                    for (int i = 0; i < allOnlineUsersList.size(); i++) {
+                                        if (allOnlineUsersList.get(i).getTags().get(0).equals("Male")) {
+                                            Log.d(TAG, "remove Male");
+                                            allOnlineUsersList.remove(i);
+                                        }
+                                    }
+                                    if (allOnlineUsersList.size() > 0) {
+                                        int min = 0;
+                                        int max = allOnlineUsersList.size() - 1;
+                                        int randomNum = min + (int) (Math.random() * ((max - min) + 1));
+                                        Log.d(TAG, "max = " + max + " randomNum = " + randomNum + " allOnlineUsersList.size() = " + allOnlineUsersList.size());
+                                        startCall(allOnlineUsersList.get(randomNum).getId());
+                                    } else
+                                        Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
+
+
+                                } else
+                                    Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
+                                mProgressDialog.dismiss();
+                                break;
                         }
+
+
                     }
-                    if (allOnlineUsersList.size() > 0) {
-                        int min = 0;
-                        int max = allOnlineUsersList.size() - 1;
-                        int randomNum = min + (int) (Math.random() * ((max - min) + 1));
-                        Log.d(TAG, "max = " + max + " randomNum = " + randomNum + " allOnlineUsersList.size() = " + allOnlineUsersList.size());
-                        startCall(allOnlineUsersList.get(randomNum).getId());
-                    } else
-                        Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
 
+                    @Override
+                    public void onError(QBResponseException responseException) {
+                        Log.d(TAG, "error getRandomUser  " + responseException.getMessage());
+                        mProgressDialog.dismiss();
+                    }
+                });
 
-                } else
-                    Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
-                mProgressDialog.dismiss();
 
             }
 
             @Override
-            public void onError(QBResponseException responseException) {
-                Log.d(TAG, "error getRandomUser  " + responseException.getMessage());
-                mProgressDialog.dismiss();
+            public void onPermissionDenied() {
+                Log.d(TAG, "onPermissionDenied() called");
+            }
+
+            @Override
+            public void onPermissionDeniedBySystem() {
+                Log.d(TAG, "onPermissionDeniedBySystem() called");
             }
         });
-    }
-
-    private void getLevel2User(Collection<Integer> onlineUsers) {
-        Log.d(TAG, " getLevel2User ");
-        QBPagedRequestBuilder pagedRequestBuilder = new QBPagedRequestBuilder();
-        pagedRequestBuilder.setPage(1);
-        pagedRequestBuilder.setPerPage(50);
-
-        QBUsers.getUsersByIDs(onlineUsers, pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
-            @Override
-            public void onSuccess(ArrayList<QBUser> result, Bundle params) {
-                Log.d(TAG, " getLevel2User  success");
-                allOnlineUsersList.clear();
-                allOnlineUsersList.addAll(result);
-                removeUserById(qbUser.getId());
-
-                if (allOnlineUsersList.size() > 0) {
-                    for (int i = 0; i < allOnlineUsersList.size(); i++) {
-                        if (allOnlineUsersList.get(i).getTags().size() == 1) {
-                            Log.d(TAG, "remove not level 2 users");
-                            allOnlineUsersList.remove(i);
-                        }
-                    }
-                    if (allOnlineUsersList.size() > 0) {
-                        int min = 0;
-                        int max = allOnlineUsersList.size() - 1;
-                        int randomNum = min + (int) (Math.random() * ((max - min) + 1));
-                        Log.d(TAG, "max = " + max + " randomNum = " + randomNum + " allOnlineUsersList.size() = " + allOnlineUsersList.size());
-                        startCall(allOnlineUsersList.get(randomNum).getId());
-                    } else
-                        Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
 
 
-                } else
-                    Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
-                mProgressDialog.dismiss();
-
-            }
-
-            @Override
-            public void onError(QBResponseException responseException) {
-                Log.d(TAG, "error getRandomUser  " + responseException.getMessage());
-                mProgressDialog.dismiss();
-            }
-        });
     }
 
 
@@ -413,7 +390,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     private void callToFemale() {
-        getFemaleUser(getOnlineUsers());
+        getRandomUser(getOnlineUsers(), 3);
     }
 
 
@@ -432,42 +409,52 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void callToLevel2User() {
-        getLevel2User(getOnlineUsers());
+        getRandomUser(getOnlineUsers(), 2);
     }
 
     private void callToRandomUser() {
+        getRandomUser(getOnlineUsers(), 1);
 
-        getRandomUser(getOnlineUsers());
-
-
-
+    }
 
 
-       /* if (allOnlineUsersList.size() > 0) {
-            int min = 0;
-            int max = allOnlineUsersList.size()- 1;
-            int randomNum = min + (int) (Math.random() * ((max - min) + 1));
-            Log.d(TAG, "max = "+ max+ " randomNum = "+ randomNum+ " allOnlineUsersList.size() = "+allOnlineUsersList.size());
-            startCall(allOnlineUsersList.get(randomNum).getId());
+    private boolean isLoggedInChat(int opponentId) {
+        if (!QBChatService.getInstance().isLoggedIn()) {
+            tryReLoginToChat(opponentId);
+            return false;
+        }
+        return true;
+    }
 
-        } else Toast.makeText(this, R.string.no_users_online, Toast.LENGTH_SHORT).show();*/
+    private void tryReLoginToChat(int opponentId) {
+        CallService.start(this, qbUser);
+        startCall(opponentId);
     }
 
 
     private void startCall(int opponentId) {
-        ArrayList<Integer> opponentsList = new ArrayList<>();
-        opponentsList.add(opponentId);
-        QBRTCTypes.QBConferenceType conferenceType = QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_AUDIO;
+        if (isLoggedInChat(opponentId)) {
+            ArrayList<Integer> opponentsList = new ArrayList<>();
+            opponentsList.add(opponentId);
+            QBRTCTypes.QBConferenceType conferenceType = QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_AUDIO;
 
-        QBRTCClient qbrtcClient = QBRTCClient.getInstance(getApplicationContext());
+            QBRTCClient qbrtcClient = QBRTCClient.getInstance(getApplicationContext());
 
-        QBRTCSession newQbRtcSession = qbrtcClient.createNewSessionWithOpponents(opponentsList, conferenceType);
+            QBRTCSession newQbRtcSession = qbrtcClient.createNewSessionWithOpponents(opponentsList, conferenceType);
 
-        WebRtcSessionManager.getInstance(this).setCurrentSession(newQbRtcSession);
+            WebRtcSessionManager.getInstance(this).setCurrentSession(newQbRtcSession);
 
-        CallActivity.start(this, false);
+            CallActivity.start(this, false);
 
+        }
+    }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (permissionHelper != null) {
+            permissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
     }
 
 

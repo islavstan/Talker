@@ -48,8 +48,8 @@ public class AudioConversationFragment extends BaseConversationFragment implemen
     @Override
     protected void configureOutgoingScreen() {
 //        outgoingOpponentsRelativeLayout.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.white));
-    //    allOpponentsTextView.setTextColor(ContextCompat.getColor(getActivity(), R.color.text_color_outgoing_opponents_names_audio_call));
-       // ringingTextView.setTextColor(ContextCompat.getColor(getActivity(), R.color.text_color_call_type));
+        //    allOpponentsTextView.setTextColor(ContextCompat.getColor(getActivity(), R.color.text_color_outgoing_opponents_names_audio_call));
+        // ringingTextView.setTextColor(ContextCompat.getColor(getActivity(), R.color.text_color_call_type));
     }
 
     @Override
@@ -71,7 +71,7 @@ public class AudioConversationFragment extends BaseConversationFragment implemen
         super.initViews(view);
         timerChronometer = (Chronometer) view.findViewById(R.id.chronometer_timer_audio_call);
 
-       // ImageView firstOpponentAvatarImageView = (ImageView) view.findViewById(R.id.image_caller_avatar);
+        // ImageView firstOpponentAvatarImageView = (ImageView) view.findViewById(R.id.image_caller_avatar);
         // firstOpponentAvatarImageView.setBackgroundDrawable(UiUtils.getColorCircleDrawable(opponents.get(0).getId()));
 
         alsoOnCallText = (TextView) view.findViewById(R.id.text_also_on_call);
@@ -87,9 +87,6 @@ public class AudioConversationFragment extends BaseConversationFragment implemen
 
         actionButtonsEnabled(false);
     }
-
-
-
 
 
     @Override
@@ -126,7 +123,7 @@ public class AudioConversationFragment extends BaseConversationFragment implemen
 
     @Override
     public void onOpponentsListUpdated(ArrayList<QBUser> newUsers) {
-       // super.onOpponentsListUpdated(newUsers);
+        // super.onOpponentsListUpdated(newUsers);
         // firstOpponentNameTextView.setText(opponents.get(0).getFullName());
         // otherOpponentsTextView.setText(getOtherOpponentsNames());
     }
@@ -140,7 +137,7 @@ public class AudioConversationFragment extends BaseConversationFragment implemen
 
             if (plugged) {
                 audioSwitchToggleButton.setChecked(true);
-            }else if(previousDeviceEarPiece){
+            } else if (previousDeviceEarPiece) {
                 audioSwitchToggleButton.setChecked(true);
             } else {
                 audioSwitchToggleButton.setChecked(false);

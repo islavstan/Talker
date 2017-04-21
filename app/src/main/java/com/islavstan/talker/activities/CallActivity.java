@@ -140,7 +140,6 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
     private void startSuitableFragment(boolean isInComingCall) {
         if (isInComingCall) {
             initIncomingCallTask();
-           // startLoadAbsentUsers();
             addIncomeCallFragment();
 
         } else {
