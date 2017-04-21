@@ -17,8 +17,11 @@
             </intent-filter>
         </activity>
         <activity android:name=".main.MainActivity" />
-        <activity android:name=".registration.RegistrationActivity"/>
+        <activity android:name=".registration.RegistrationActivity" />
+
         <service android:name=".call_functions.service.CallService" />
+
+        <activity android:name=".activities.CallActivity"></activity>
     </application>
 
 </manifest>
