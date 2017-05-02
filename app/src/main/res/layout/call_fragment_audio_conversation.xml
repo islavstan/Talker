@@ -4,6 +4,7 @@
     android:id="@+id/fragmentIncomeCall"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
    >
 
 
@@ -19,6 +20,7 @@
         android:layout_centerHorizontal="true"
         android:layout_gravity="center"
         android:layout_marginTop="8dp"
+        android:textColor="@color/white"
         android:textSize="18sp"
         android:visibility="invisible" />
     <include layout="@layout/call_view_action_buttons_conversation_fragment" />

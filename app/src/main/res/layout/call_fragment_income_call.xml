@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/fragmentIncomeCall"
     android:layout_width="match_parent"
+    android:background="@color/colorPrimary"
     android:layout_height="match_parent">
     <LinearLayout
         android:id="@+id/layout_info_about_call"
@@ -26,10 +27,11 @@
             android:layout_marginTop="8dp"
             android:layout_weight="3"
             android:maxLines="1"
+            android:textColor="@color/white"
             android:gravity="center_horizontal"
             android:text="@string/income_call"
             android:textSize="20sp"
-            android:textStyle="normal"/>
+            android:textStyle="bold"/>
 
     </LinearLayout>
     <RelativeLayout
