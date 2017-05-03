@@ -24,6 +24,7 @@ import com.islavstan.free_talker.Manifest;
 import com.islavstan.free_talker.R;
 import com.islavstan.free_talker.activities.CallActivity;
 import com.islavstan.free_talker.call_functions.service.CallService;
+import com.islavstan.free_talker.gcm.PushNotificationSender;
 import com.islavstan.free_talker.utils.Constants;
 import com.islavstan.free_talker.utils.Consts;
 import com.islavstan.free_talker.utils.InternetConnection;
@@ -143,6 +144,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (qbUser != null) {
             CallService.start(MainActivity.this, qbUser);
             signIn(qbUser);
+            Log.d(TAG, qbUser.getId()+" my id");
 
         }
 
@@ -356,6 +358,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     int max = allOnlineUsersList.size() - 1;
                                     int randomNum = min + (int) (Math.random() * ((max - min) + 1));
                                     Log.d(TAG, "max = " + max + " randomNum = " + randomNum + " allOnlineUsersList.size() = " + allOnlineUsersList.size());
+
+
+
+
+
+
                                     startCall(allOnlineUsersList.get(randomNum).getId());
 
 
@@ -567,7 +575,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (!internetConnection || groupChatDialog == null) {
             callSecondTime();
         } else
-            getRandomUser(getOnlineUsers(), 1);
+          //  getRandomUser(getOnlineUsers(), 1);
+        startCall(27143020);
     }
 
     private void callSecondTime() {
@@ -605,6 +614,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             QBRTCClient qbrtcClient = QBRTCClient.getInstance(getApplicationContext());
             QBRTCSession newQbRtcSession = qbrtcClient.createNewSessionWithOpponents(opponentsList, conferenceType);
             WebRtcSessionManager.getInstance(this).setCurrentSession(newQbRtcSession);
+
+            
+            ArrayList<Integer> recipients = new ArrayList<Integer>();
+            recipients.add(opponentId);
+            PushNotificationSender.sendPushMessage(recipients, qbUser.getLogin());
+
+
+
             CallActivity.start(this, false, sendList, opponentId);
 
         }

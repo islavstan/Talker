@@ -2,6 +2,9 @@ apply plugin: 'com.android.application'
 
 apply plugin: 'io.fabric'
 
+apply plugin: 'me.tatarka.retrolambda'
+
+
 
 buildscript {
     repositories {
@@ -16,6 +19,22 @@ buildscript {
 
 repositories {
     maven { url 'https://maven.fabric.io/public' }
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'me.tatarka:gradle-retrolambda:3.2.3'
+    }
+}
+android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
 }
 
 
@@ -52,7 +71,7 @@ dependencies {
     compile ("com.quickblox:quickblox-android-sdk-messages:3.3.0" )
     compile 'com.master.android:permissionhelper:1.0'
 
-    compile 'com.google.android.gms:play-services-ads:10.2.4'
+    compile 'com.google.android.gms:play-services-ads:10.2.1'
 
     compile 'org.greenrobot:eventbus:3.0.0'
     compile('com.crashlytics.sdk.android:crashlytics:2.6.7@aar') {
@@ -60,10 +79,11 @@ dependencies {
     }
 
 
-    compile "com.google.android.gms:play-services-gcm:10.2.4"
-    compile "com.google.firebase:firebase-messaging:10.0.1"
-    compile "com.google.firebase:firebase-core:10.0.1"
-
+    compile "com.google.android.gms:play-services-gcm:10.2.1"
+    compile "com.google.firebase:firebase-messaging:10.2.1"
+    compile "com.google.firebase:firebase-core:10.2.1"
+    compile 'io.reactivex:rxandroid:1.2.1'
+    compile 'io.reactivex:rxjava:1.1.6'
 
 }
 apply plugin: 'com.google.gms.google-services'

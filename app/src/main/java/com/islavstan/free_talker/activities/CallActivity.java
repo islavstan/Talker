@@ -307,7 +307,7 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
         // Configure
         //
         QBRTCConfig.setMaxOpponentsCount(Consts.MAX_OPPONENTS_COUNT);
-        QBRTCConfig.setAnswerTimeInterval(15);
+        QBRTCConfig.setAnswerTimeInterval(25);
         QBRTCConfig.setDebugEnabled(true);
 
 

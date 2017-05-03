@@ -1,15 +1,19 @@
 package com.islavstan.free_talker.call_functions.service;
 
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 
+import com.islavstan.free_talker.R;
 import com.islavstan.free_talker.utils.ChatPingAlarmManager;
 import com.islavstan.free_talker.utils.Consts;
 import com.islavstan.free_talker.utils.WebRtcSessionManager;
@@ -235,4 +239,19 @@ public class CallService extends Service {
         super.onTaskRemoved(rootIntent);
         destroyRtcClientAndChat();
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

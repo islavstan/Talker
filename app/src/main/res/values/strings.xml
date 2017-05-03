@@ -46,6 +46,8 @@
 
     <string name="sender_id">863072822950</string>
 
+    <string name="user_blocked">User blocked</string>
+
 
     <string-array name="sex_array">
         <item>Male</item>

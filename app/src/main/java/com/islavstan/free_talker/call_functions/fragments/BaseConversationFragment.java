@@ -1,6 +1,8 @@
 package com.islavstan.free_talker.call_functions.fragments;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
@@ -12,11 +14,13 @@ import android.widget.Chronometer;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.islavstan.free_talker.R;
 import com.islavstan.free_talker.activities.CallActivity;
 import com.islavstan.free_talker.bus.CallEvent;
+import com.islavstan.free_talker.db.DBHelper;
 import com.islavstan.free_talker.utils.Consts;
 import com.islavstan.free_talker.utils.PreferenceHelper;
 import com.islavstan.free_talker.utils.WebRtcSessionManager;
@@ -29,6 +33,9 @@ import com.quickblox.videochat.webrtc.QBRTCTypes;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public abstract class BaseConversationFragment extends BaseToolBarFragment implements CallActivity.CurrentCallStateCallback {
 
@@ -47,6 +54,9 @@ public abstract class BaseConversationFragment extends BaseToolBarFragment imple
     protected View outgoingOpponentsRelativeLayout;
     protected TextView ringingTextView;
     protected QBUser currentUser;
+    private ToggleButton likeBtn;
+    private ImageButton blockBtn;
+    DBHelper dbHelper;
 
     public static BaseConversationFragment newInstance(BaseConversationFragment baseConversationFragment, boolean isIncomingCall) {
         Log.d(TAG, "isIncomingCall =  " + isIncomingCall);
@@ -80,6 +90,7 @@ public abstract class BaseConversationFragment extends BaseToolBarFragment imple
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = super.onCreateView(inflater, container, savedInstanceState);
         sessionManager = WebRtcSessionManager.getInstance(getActivity());
+        dbHelper = DBHelper.getInstance(getActivity());
         currentSession = sessionManager.getCurrentSession();
         if (currentSession == null) {
             Log.d(TAG, "currentSession = null onCreateView");
@@ -94,19 +105,13 @@ public abstract class BaseConversationFragment extends BaseToolBarFragment imple
     }
 
 
-
-
-
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(CallEvent event) {
         reloadSession();
     }
 
 
-
-
-
-    void reloadSession(){
+    void reloadSession() {
         sessionManager = WebRtcSessionManager.getInstance(getActivity());
         currentSession = sessionManager.getCurrentSession();
         conversationFragmentCallbackListener.addCurrentCallStateCallback(this);
@@ -160,7 +165,7 @@ public abstract class BaseConversationFragment extends BaseToolBarFragment imple
                 currentSession.acceptCall(null);
             } else {
                 currentSession.startCall(null);
-                ((CallActivity)getActivity()).ringtonePlayer.play(true);
+                ((CallActivity) getActivity()).ringtonePlayer.play(true);
             }
             isMessageProcessed = true;
         }
@@ -183,6 +188,7 @@ public abstract class BaseConversationFragment extends BaseToolBarFragment imple
         endCallBtn = (ImageButton) view.findViewById(R.id.button_hangup_call);
         outgoingOpponentsRelativeLayout = view.findViewById(R.id.layout_background_outgoing_screen);
         ringingTextView = (TextView) view.findViewById(R.id.text_ringing);
+        blockBtn = (ImageButton) view.findViewById(R.id.toggle_block);
 
 
         if (isIncomingCall) {
@@ -192,6 +198,46 @@ public abstract class BaseConversationFragment extends BaseToolBarFragment imple
     }
 
     protected void initButtonsListener() {
+
+        blockBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final AlertDialog.Builder ad = new AlertDialog.Builder(getActivity());
+                ad.setTitle("Block user");
+                ad.setMessage("Do you really want to block this user?");
+                ad.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int arg1) {
+                        Log.d("stas", "caller id  == " + currentSession.getCallerID());
+                        if (currentSession.getCallerID() != null) {
+                            dbHelper.blockUser(currentSession.getCallerID())
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe(result -> {
+                                        if (result == 1) {
+                                            Toast.makeText(getActivity(), R.string.user_blocked, Toast.LENGTH_SHORT).show();
+                                            actionButtonsEnabled(false);
+                                            endCallBtn.setEnabled(false);
+                                            endCallBtn.setActivated(false);
+                                            conversationFragmentCallbackListener.onHangUpCurrentSession();
+                                            Log.d(TAG, "Call is stopped");
+                                        }
+
+                                    }, error -> Log.d(TAG, "blockUser error = " + error.getMessage()));
+                        }
+
+
+                    }
+                });
+                ad.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int arg1) {
+
+                    }
+                });
+                ad.setCancelable(true);
+                ad.show();
+            }
+        });
+
 
         micToggleVideoCall.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -204,7 +250,6 @@ public abstract class BaseConversationFragment extends BaseToolBarFragment imple
 
             @Override
             public void onClick(View v) {
-                Log.d("stas", "CLICKK");
                 actionButtonsEnabled(false);
                 endCallBtn.setEnabled(false);
                 endCallBtn.setActivated(false);
@@ -228,7 +273,7 @@ public abstract class BaseConversationFragment extends BaseToolBarFragment imple
             timerChronometer.setVisibility(View.VISIBLE);
             timerChronometer.setBase(SystemClock.elapsedRealtime());
             timerChronometer.start();
-            Log.d("VOMER_DATA", "timer start" );
+            Log.d("VOMER_DATA", "timer start");
             isStarted = true;
         }
     }
@@ -247,7 +292,6 @@ public abstract class BaseConversationFragment extends BaseToolBarFragment imple
 
         }
     }
-
 
 
     @Override
