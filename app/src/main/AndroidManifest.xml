@@ -114,7 +114,9 @@
 
 
 
-        <receiver android:name=".gcm.GcmPushListenerService$ActionReceiver"/>
+
+        <receiver android:name=".gcm.CallReceiver"/>
+
 
 
         <activity

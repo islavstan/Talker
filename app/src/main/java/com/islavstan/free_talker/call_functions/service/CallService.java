@@ -1,6 +1,7 @@
 package com.islavstan.free_talker.call_functions.service;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -14,6 +15,7 @@ import android.util.Log;
 
 
 import com.islavstan.free_talker.R;
+import com.islavstan.free_talker.gcm.GcmPushListenerService;
 import com.islavstan.free_talker.utils.ChatPingAlarmManager;
 import com.islavstan.free_talker.utils.Consts;
 import com.islavstan.free_talker.utils.WebRtcSessionManager;
@@ -39,6 +41,7 @@ public  class CallService extends Service {
     private PendingIntent pendingIntent;
     private int currentCommand;
     private QBUser currentUser;
+    static NotificationManager mNotificationManager;
 
     public static void start(Context context, QBUser qbUser, PendingIntent pendingIntent) {
         Intent intent = new Intent(context, CallService.class);
@@ -54,6 +57,28 @@ public  class CallService extends Service {
         start(context, qbUser, null);
         Log.d(TAG, "qbUser get Login = "+qbUser.getLogin()+qbUser.getId()+qbUser.getPassword());
     }
+
+    public static void startFromPush(Context context, QBUser qbUser) {
+       // start(context, qbUser, null);
+
+
+        Log.d(TAG, "qbUser get Login = "+qbUser.getLogin()+qbUser.getId()+qbUser.getPassword());
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @Override
     public void onCreate() {
