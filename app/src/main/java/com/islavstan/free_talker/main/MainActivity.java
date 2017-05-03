@@ -57,7 +57,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     String TAG = "stas";
-    Button level1Btn, level2Btn, blockBtn, shareBtn, femaleBtn;
+    Button level1Btn, level2Btn, blockBtn, shareBtn, femaleBtn, lastCallerBtn;
     PreferenceHelper preferenceHelper;
     QBUser qbUser;
     WebRtcSessionManager webRtcSessionManager;
@@ -127,12 +127,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         blockBtn = (Button) findViewById(R.id.blockBtn);
         shareBtn = (Button) findViewById(R.id.shareBtn);
         femaleBtn = (Button) findViewById(R.id.femaleBtn);
+        lastCallerBtn = (Button) findViewById(R.id.lastCallerBtn);
 
         level1Btn.setOnClickListener(this);
         level2Btn.setOnClickListener(this);
         blockBtn.setOnClickListener(this);
         shareBtn.setOnClickListener(this);
         femaleBtn.setOnClickListener(this);
+        lastCallerBtn.setOnClickListener(this);
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setTitle(getString(R.string.please_wait));
         mProgressDialog.setMessage(getString(R.string.looking_for_an_opponent));
@@ -486,7 +488,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Toast.makeText(this, R.string.free, Toast.LENGTH_LONG).show();
                 blockAdmob();
                 break;
+            case R.id.lastCallerBtn:
+                callLastCaller();
+                break;
+
+
         }
+    }
+
+    private void callLastCaller() {
+        int lastCallerId = preferenceHelper.getInt(PreferenceHelper.LAST_CALLER);
+        if (lastCallerId != 0) {
+            startCall(lastCallerId);
+        } else Toast.makeText(this, R.string.need_conversation, Toast.LENGTH_SHORT).show();
+
+
     }
 
 
@@ -576,7 +592,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             callSecondTime();
         } else
           //  getRandomUser(getOnlineUsers(), 1);
-        startCall(27143020);
+        startCall(27211590);
     }
 
     private void callSecondTime() {

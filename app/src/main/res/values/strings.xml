@@ -47,6 +47,8 @@
     <string name="sender_id">863072822950</string>
 
     <string name="user_blocked">User blocked</string>
+    <string name="call_last_caller">Call last caller</string>
+    <string name="need_conversation">You can use this function after the next conversation</string>
 
 
     <string-array name="sex_array">

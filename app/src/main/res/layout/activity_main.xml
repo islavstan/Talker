@@ -8,7 +8,10 @@
     android:layout_height="match_parent"
 
     tools:context="com.islavstan.free_talker.main.MainActivity">
-
+<ScrollView
+    android:layout_width="match_parent"
+    android:layout_above="@+id/adView"
+    android:layout_height="match_parent">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -70,6 +73,16 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:text="@string/talk_to_level_2" />
+        <Button
+            android:textStyle="bold"
+            android:background="@color/white"
+            android:textColor="@color/colorPrimary"
+            android:id="@+id/lastCallerBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="@string/call_last_caller" />
+
 
         <Button
             android:textStyle="bold"
@@ -104,6 +117,7 @@
 
 
     </LinearLayout>
+</ScrollView>
 
   <com.google.android.gms.ads.AdView
         android:layout_alignParentBottom="true"

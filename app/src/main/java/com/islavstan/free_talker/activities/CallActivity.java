@@ -468,6 +468,9 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
     @Override
     public void onCallAcceptByUser(QBRTCSession session, Integer userId, Map<String, String> userInfo) {
         Log.d("stas2", "onCallAcceptByUser ");
+        if (session.getOpponents().get(0) != null) {
+            preferenceHelper.putInt(PreferenceHelper.LAST_CALLER, session.getOpponents().get(0));
+        }
         callAccept = true;
         if (!session.equals(getCurrentSession())) {
             return;
@@ -481,7 +484,7 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
         if (!session.equals(getCurrentSession())) {
             return;
         }
-        //ringtonePlayer.stop();
+
     }
 
     @Override
@@ -508,8 +511,6 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
     @Override
     public void onSessionClosed(final QBRTCSession session) {
 
-        Log.d(TAG, "Session " + session.getSessionID() + " start stop session");
-
         if (!callAccept && !isInCommingCall) {
             removeId(opponentId, usersList);
             if (usersList.size() > 0) {
@@ -527,7 +528,6 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
             } else {
                 Toast.makeText(this, R.string.no_users_online, Toast.LENGTH_LONG).show();
                 if (session.equals(getCurrentSession())) {
-                    Log.d(TAG, "Stop session");
                     ringtonePlayer.stop();
                     if (audioManager != null) {
                         audioManager.close();
@@ -541,7 +541,6 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
 
         } else {
             if (session.equals(getCurrentSession())) {
-                Log.d(TAG, "Stop session");
                 ringtonePlayer.stop();
                 if (audioManager != null) {
                     audioManager.close();
@@ -647,6 +646,10 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
     public void onAcceptCurrentSession() {
         if (currentSession != null) {
             addConversationFragment(true);
+            if (currentSession.getCallerID() != null)
+                preferenceHelper.putInt(PreferenceHelper.LAST_CALLER, currentSession.getCallerID());
+
+
         } else {
             Log.d(TAG, "SKIP addConversationFragment method");
         }

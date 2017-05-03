@@ -54,7 +54,7 @@ public abstract class BaseConversationFragment extends BaseToolBarFragment imple
     protected View outgoingOpponentsRelativeLayout;
     protected TextView ringingTextView;
     protected QBUser currentUser;
-    private ToggleButton likeBtn;
+    //private ToggleButton likeBtn;
     private ImageButton blockBtn;
     DBHelper dbHelper;
 

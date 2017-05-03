@@ -32,7 +32,7 @@ import org.jivesoftware.smackx.ping.PingFailedListener;
 /**
  * QuickBlox team
  */
-public class CallService extends Service {
+public  class CallService extends Service {
     private static final String TAG = "stas2";
     private QBChatService chatService;
     private QBRTCClient rtcClient;

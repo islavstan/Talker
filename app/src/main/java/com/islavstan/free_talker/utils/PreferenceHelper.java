@@ -18,6 +18,7 @@ public class PreferenceHelper {
     public static final String QB_USER_ID = "qb_user_id";
     public static final String LEVEL2 = "level2";
     public static final String LEVEL2_EXIST = "level2_exist";
+    public static final String LAST_CALLER = "last_caller";
 
     public static PreferenceHelper getInstance() {
         if (instance == null) {
