@@ -41,7 +41,7 @@ public  class CallService extends Service {
     private PendingIntent pendingIntent;
     private int currentCommand;
     private QBUser currentUser;
-    static NotificationManager mNotificationManager;
+
 
     public static void start(Context context, QBUser qbUser, PendingIntent pendingIntent) {
         Intent intent = new Intent(context, CallService.class);
@@ -58,28 +58,6 @@ public  class CallService extends Service {
         Log.d(TAG, "qbUser get Login = "+qbUser.getLogin()+qbUser.getId()+qbUser.getPassword());
     }
 
-    public static void startFromPush(Context context, QBUser qbUser) {
-       // start(context, qbUser, null);
-
-
-        Log.d(TAG, "qbUser get Login = "+qbUser.getLogin()+qbUser.getId()+qbUser.getPassword());
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -92,11 +70,8 @@ public  class CallService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "Service started");
-
         parseIntentExtras(intent);
-
         startSuitableActions();
-
         return START_REDELIVER_INTENT;
     }
 
@@ -168,28 +143,30 @@ public  class CallService extends Service {
     }
 
     private void initQBRTCClient() {
-        rtcClient = QBRTCClient.getInstance(getApplicationContext());
-        // Add signalling manager
-        chatService.getVideoChatWebRTCSignalingManager().addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
-            @Override
-            public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
-                Log.d("CALL_LOG", "addSignaling = "+createdLocally) ;
-                if (!createdLocally) {
+      Log.d("stas", chatService.isLoggedIn()+" chatService.isLoggedIn()");
+            rtcClient = QBRTCClient.getInstance(getApplicationContext());
+            // Add signalling manager
+            chatService.getVideoChatWebRTCSignalingManager().addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
+                @Override
+                public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
+                    Log.d("CALL_LOG", "addSignaling = " + createdLocally);
+                    if (!createdLocally) {
 
-                    rtcClient.addSignaling((QBWebRTCSignaling) qbSignaling);
+                        rtcClient.addSignaling((QBWebRTCSignaling) qbSignaling);
+                    }
                 }
-            }
-        });
+            });
 
-        // Configure
-        QBRTCConfig.setDebugEnabled(true);
+            // Configure
+            QBRTCConfig.setDebugEnabled(true);
 
 
-        // Add service as callback to RTCClient
-        Log.d(TAG,"prepareToProcessCalls");
-        rtcClient.addSessionCallbacksListener(WebRtcSessionManager.getInstance(this));
-        rtcClient.prepareToProcessCalls();
-    }
+            // Add service as callback to RTCClient
+            Log.d(TAG, "prepareToProcessCalls");
+            rtcClient.addSessionCallbacksListener(WebRtcSessionManager.getInstance(this));
+            rtcClient.prepareToProcessCalls();
+        }
+
 
     private void sendResultToActivity(boolean isSuccess, String errorMessage) {
         if (pendingIntent != null) {

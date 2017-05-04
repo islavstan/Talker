@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
+import com.islavstan.free_talker.App;
 import com.islavstan.free_talker.R;
 import com.islavstan.free_talker.bus.CallEvent;
 import com.islavstan.free_talker.call_functions.fragments.AudioConversationFragment;
@@ -403,12 +404,14 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
     @Override
     protected void onResume() {
         super.onResume();
+        App.setAppOpen(true);
         //  networkConnectionChecker.registerListener(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        App.setAppOpen(false);
         //  networkConnectionChecker.unregisterListener(this);
     }
 

@@ -62,20 +62,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     QBUser qbUser;
     WebRtcSessionManager webRtcSessionManager;
     boolean isRunForCall;
-
     QBChatDialog groupChatDialog;
-
-
     List<QBUser> allOnlineUsersList = new ArrayList<>();
-
-
     private ProgressDialog mProgressDialog;
     PermissionHelper permissionHelper;
     private AdView mAdView;
-
     int callType;
     boolean internetConnection = true;
-
     ImageButton refreshBtn;
     TextView onlineTV;
     List<QBUser> listForOnline = new ArrayList<>();
@@ -107,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         internetConnection = InternetConnection.hasConnection(this);
 
-
+       Log.d("stas" , App.isAppOpen()+ " = App.isAppOpen");
         mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
@@ -151,6 +144,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         if (isRunForCall && webRtcSessionManager.getCurrentSession() != null) {
+            Log.d("stas", "isRunForCall && webRtcSessionManager.getCurrentSession()" );
             CallActivity.start(MainActivity.this, true);
         }
 
@@ -206,11 +200,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d("stas", "onPause");
+        App.setAppOpen(false);
+        App.setAppOnPause(true);
         if (mAdView != null) {
             mAdView.pause();
         }
-
         if (groupChatDialog != null) {
             try {
                 groupChatDialog.leave();
@@ -227,6 +221,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (mAdView != null) {
             mAdView.resume();
         }
+        App.setAppOpen(true);
+        App.setAppOnPause(false);
     }
 
 
@@ -241,10 +237,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onStart() {
         super.onStart();
-        Log.d("stas", "onStart");
+
+      //  CallService.start(MainActivity.this, qbUser);
         if (groupChatDialog == null) {
             getChatDialogById();
         }
+
     }
 
     public void signIn(final QBUser qbUser) {
@@ -360,14 +358,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     int max = allOnlineUsersList.size() - 1;
                                     int randomNum = min + (int) (Math.random() * ((max - min) + 1));
                                     Log.d(TAG, "max = " + max + " randomNum = " + randomNum + " allOnlineUsersList.size() = " + allOnlineUsersList.size());
-
-
-
-
-
-
                                     startCall(allOnlineUsersList.get(randomNum).getId());
-
 
                                 } else
                                     Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
@@ -630,11 +621,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             QBRTCClient qbrtcClient = QBRTCClient.getInstance(getApplicationContext());
             QBRTCSession newQbRtcSession = qbrtcClient.createNewSessionWithOpponents(opponentsList, conferenceType);
             WebRtcSessionManager.getInstance(this).setCurrentSession(newQbRtcSession);
-
-            
             ArrayList<Integer> recipients = new ArrayList<Integer>();
             recipients.add(opponentId);
-            PushNotificationSender.sendPushMessage(recipients, qbUser.getLogin());
+            PushNotificationSender.sendPushMessage(recipients, qbUser.getId()+"");
 
 
 

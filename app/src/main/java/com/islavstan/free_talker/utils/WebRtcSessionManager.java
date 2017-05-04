@@ -4,6 +4,7 @@ import android.content.Context;
 import android.nfc.Tag;
 import android.util.Log;
 
+import com.islavstan.free_talker.App;
 import com.islavstan.free_talker.db.DBHelper;
 import com.islavstan.free_talker.main.MainActivity;
 import com.quickblox.videochat.webrtc.QBRTCSession;
@@ -47,6 +48,8 @@ public class WebRtcSessionManager extends QBRTCClientSessionCallbacksImpl {
     @Override
     public void onReceiveNewSession(QBRTCSession session) {
         Log.d(TAG, "onReceiveNewSession to WebRtcSessionManager");
+        Log.d(TAG, App.isAppOpen() + " App.isAppOpen() WebRtcSessionManager");
+
         if (currentSession == null) {
             Log.d(TAG, "caller id = " + session.getCallerID());
             // здесь проверять заблочен ли юзер
@@ -56,16 +59,18 @@ public class WebRtcSessionManager extends QBRTCClientSessionCallbacksImpl {
                     .subscribe(result -> {
                         if (result == 0) {
                             setCurrentSession(session);
-                            MainActivity.start(context, true);
+                            if (App.isAppOpen() || !App.isAppOnPause()) {
+                                MainActivity.start(context, true);
+                            }
                         } else {
                             Log.d(TAG, "call block user");
                         }
 
                     }, error -> Log.d(TAG, "getBlockUser error = " + error.getMessage()));
 
-
         }
     }
+
 
     @Override
     public void onSessionClosed(QBRTCSession session) {

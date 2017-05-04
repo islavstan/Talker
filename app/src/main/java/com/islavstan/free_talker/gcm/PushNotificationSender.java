@@ -10,12 +10,11 @@ import java.util.ArrayList;
 
 
 public class PushNotificationSender {
-    public static void sendPushMessage(ArrayList<Integer> recipients, String senderName) {
+    public static void sendPushMessage(ArrayList<Integer> recipients, String senderId) {
         QBEvent qbEvent = new QBEvent();
         qbEvent.setNotificationType(QBNotificationType.PUSH);
         qbEvent.setEnvironment(QBEnvironment.DEVELOPMENT);
-        // Generic push - will be delivered to all platforms (Android, iOS, WP, Blackberry..)
-        qbEvent.setMessage(senderName);
+        qbEvent.setMessage(senderId);
         StringifyArrayList<Integer> userIds = new StringifyArrayList<>(recipients);
         qbEvent.setUserIds(userIds);
         QBPushNotifications.createEvent(qbEvent).performAsync(null);
