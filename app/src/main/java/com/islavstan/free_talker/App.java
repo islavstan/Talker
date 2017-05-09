@@ -10,12 +10,13 @@ import io.fabric.sdk.android.Fabric;
 
 
 public class App extends Application {
-   /* public static final String APP_ID = "56925";
+
+ /*   public static final String APP_ID = "56925";
     public static final String AUTH_KEY = "hkQgprSY7YBSVbr";
     public static final String AUTH_SECRET = "JGPJjry9xZMsH8S";
     public static final String ACCOUNT_KEY = "ZVtq8i2UTCe26RRHtzsG";
+*/
 
-    */
 
 
 //мои данные

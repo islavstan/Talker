@@ -55,7 +55,7 @@ public class GcmPushListenerService extends GcmListenerService {
         notification.flags |= Notification.FLAG_AUTO_CANCEL;
         mNotificationManager.notify(100, notification);
         removeNotification(100);
-        //CallService.startFromPush(this, qbUser);//здесь нужно поменять на метод который будет показывать пуш
+
     }
 
 

@@ -72,6 +72,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ImageButton refreshBtn;
     TextView onlineTV;
     List<QBUser> listForOnline = new ArrayList<>();
+    List<QBUser> randomListForPush = new ArrayList<>();
 
 
     public static void startActivity(Context context, int flags) {
@@ -99,8 +100,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         internetConnection = InternetConnection.hasConnection(this);
+        App.setAppOpen(true);
 
-       Log.d("stas" , App.isAppOpen()+ " = App.isAppOpen");
         mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
@@ -200,8 +201,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onPause() {
         super.onPause();
-        App.setAppOpen(false);
-        App.setAppOnPause(true);
+        //  App.setAppOpen(false);
+        // App.setAppOnPause(true);
         if (mAdView != null) {
             mAdView.pause();
         }
@@ -222,7 +223,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mAdView.resume();
         }
         App.setAppOpen(true);
-        App.setAppOnPause(false);
+      //  App.setAppOnPause(false);
     }
 
 
@@ -231,6 +232,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (mAdView != null) {
             mAdView.destroy();
         }
+        App.setAppOpen(false);
         super.onDestroy();
     }
 
@@ -238,7 +240,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onStart() {
         super.onStart();
 
-      //  CallService.start(MainActivity.this, qbUser);
         if (groupChatDialog == null) {
             getChatDialogById();
         }
@@ -335,9 +336,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         permissionHelper.request(new PermissionHelper.PermissionCallback() {
             @Override
             public void onPermissionGranted() {
-                Log.d(TAG, "onPermissionGranted() called");
 
-                Log.d(TAG, " getRandomUser ");
                 QBPagedRequestBuilder pagedRequestBuilder = new QBPagedRequestBuilder();
                 pagedRequestBuilder.setPage(1);
                 pagedRequestBuilder.setPerPage(50);
@@ -345,7 +344,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 QBUsers.getUsersByIDs(onlineUsers, pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
                     @Override
                     public void onSuccess(ArrayList<QBUser> result, Bundle params) {
-                        Log.d(TAG, " getRandomUser  success");
 
                         switch (type) {
                             case 1:
@@ -357,13 +355,67 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     int min = 0;
                                     int max = allOnlineUsersList.size() - 1;
                                     int randomNum = min + (int) (Math.random() * ((max - min) + 1));
-                                    Log.d(TAG, "max = " + max + " randomNum = " + randomNum + " allOnlineUsersList.size() = " + allOnlineUsersList.size());
                                     startCall(allOnlineUsersList.get(randomNum).getId());
 
-                                } else
+                                   /* int minPush = 1;
+                                    int maxPush = 200;
+                                    int randomNumForPush = minPush + (int) (Math.random() * ((maxPush - minPush) + 1));
+
+                                    QBPagedRequestBuilder pagedRequestBuilder = new QBPagedRequestBuilder();
+                                    //поменять тут на рандомное значение
+                                    pagedRequestBuilder.setPage(randomNumForPush);
+                                    pagedRequestBuilder.setPerPage(10);
+                                    QBUsers.getUsers(pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
+                                        @Override
+                                        public void onSuccess(ArrayList<QBUser> users, Bundle params) {
+                                            randomListForPush.clear();
+                                            randomListForPush.addAll(users);
+                                            startCall(allOnlineUsersList.get(randomNum).getId(), randomListForPush);
+
+                                        }
+
+                                        @Override
+                                        public void onError(QBResponseException errors) {
+
+                                        }
+                                    });*/
+
+
+                                } else {
                                     Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
-                                mProgressDialog.dismiss();
-                                break;
+                                    mProgressDialog.dismiss();
+                                   /* int minPush = 1;
+                                    int maxPush = 200;
+                                    int randomNumForPush = minPush + (int) (Math.random() * ((maxPush - minPush) + 1));
+
+                                    QBPagedRequestBuilder pagedRequestBuilder = new QBPagedRequestBuilder();
+                                    //поменять тут на рандомное значение
+                                    pagedRequestBuilder.setPage(randomNumForPush);
+                                    pagedRequestBuilder.setPerPage(10);
+                                    QBUsers.getUsers(pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
+                                        @Override
+                                        public void onSuccess(ArrayList<QBUser> users, Bundle params) {
+                                            allOnlineUsersList.clear();
+                                            allOnlineUsersList.addAll(users);
+                                            if(allOnlineUsersList.size()>0) {
+                                                startCall(allOnlineUsersList.get(0).getId());
+                                            } else {
+                                                Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
+                                                  mProgressDialog.dismiss();
+                                            }
+
+                                        }
+
+                                        @Override
+                                        public void onError(QBResponseException errors) {
+
+                                        }
+                                    });
+
+
+                                }*/
+                                    break;
+                                }
 
                             case 2:
                                 allOnlineUsersList.clear();
@@ -380,8 +432,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         int min = 0;
                                         int max = allOnlineUsersList.size() - 1;
                                         int randomNum = min + (int) (Math.random() * ((max - min) + 1));
-                                        Log.d(TAG, "max = " + max + " randomNum = " + randomNum + " allOnlineUsersList.size() = " + allOnlineUsersList.size());
                                         startCall(allOnlineUsersList.get(randomNum).getId());
+
+                                        /*Log.d(TAG, "max = " + max + " randomNum = " + randomNum + " allOnlineUsersList.size() = " + allOnlineUsersList.size());
+
+                                        int minPush = 1;
+                                        int maxPush = 200;
+                                        int randomNumForPush = minPush + (int) (Math.random() * ((maxPush - minPush) + 1));
+
+                                        QBPagedRequestBuilder pagedRequestBuilder = new QBPagedRequestBuilder();
+                                        //поменять тут на рандомное значение
+                                        pagedRequestBuilder.setPage(randomNumForPush);
+                                        pagedRequestBuilder.setPerPage(10);
+                                        QBUsers.getUsers(pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
+                                            @Override
+                                            public void onSuccess(ArrayList<QBUser> users, Bundle params) {
+                                                randomListForPush.clear();
+                                                randomListForPush.addAll(users);
+                                                if (randomListForPush.size() > 0) {
+                                                    for (int i = 0; i < randomListForPush.size(); i++) {
+                                                        if (randomListForPush.get(i).getTags().size() == 1) {
+                                                            Log.d(TAG, "remove not level 2 users");
+                                                            randomListForPush.remove(i);
+                                                        }
+                                                    }
+
+                                                }
+                                                if (randomListForPush.size() > 0) {
+                                                    startCall(allOnlineUsersList.get(randomNum).getId(), randomListForPush);
+                                                } else
+                                                    startCall(allOnlineUsersList.get(randomNum).getId());
+
+                                            }
+
+                                            @Override
+                                            public void onError(QBResponseException errors) {
+
+                                            }
+                                        });
+
+*/
                                     } else
                                         Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
                                     mProgressDialog.dismiss();
@@ -399,7 +489,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 if (allOnlineUsersList.size() > 0) {
                                     for (int i = 0; i < allOnlineUsersList.size(); i++) {
                                         if (allOnlineUsersList.get(i).getTags().get(0).equals("Male")) {
-                                            Log.d(TAG, "remove Male");
                                             allOnlineUsersList.remove(i);
                                         }
                                     }
@@ -486,6 +575,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
     }
+
+
+
+    private List<QBUser> getRandomUsersForPush() {
+        QBPagedRequestBuilder pagedRequestBuilder = new QBPagedRequestBuilder();
+        //поменять тут на рандомное значение
+        pagedRequestBuilder.setPage(1);
+        pagedRequestBuilder.setPerPage(100);
+        QBUsers.getUsers(pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
+            @Override
+            public void onSuccess(ArrayList<QBUser> users, Bundle params) {
+                randomListForPush = users;
+
+            }
+
+            @Override
+            public void onError(QBResponseException errors) {
+
+            }
+        });
+        return randomListForPush;
+
+    }
+
+
+
+
+
 
     private void callLastCaller() {
         int lastCallerId = preferenceHelper.getInt(PreferenceHelper.LAST_CALLER);
@@ -582,8 +699,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (!internetConnection || groupChatDialog == null) {
             callSecondTime();
         } else
-          //  getRandomUser(getOnlineUsers(), 1);
-        startCall(27211590);
+            getRandomUser(getOnlineUsers(), 1);
+
     }
 
     private void callSecondTime() {
@@ -624,6 +741,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ArrayList<Integer> recipients = new ArrayList<Integer>();
             recipients.add(opponentId);
             PushNotificationSender.sendPushMessage(recipients, qbUser.getId()+"");
+            mProgressDialog.dismiss();
 
 
 
@@ -631,6 +749,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
     }
+
+
+
+    private void startCall(int opponentId, List<QBUser>pushList) {
+        if (isLoggedInChat(opponentId)) {
+            ArrayList<Integer> sendList = getIds();
+            sendList.addAll(getIds(pushList));
+            removeId(opponentId, sendList);
+            ArrayList<Integer> opponentsList = new ArrayList<>();
+            opponentsList.add(opponentId);
+            QBRTCTypes.QBConferenceType conferenceType = QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_AUDIO;
+            QBRTCClient qbrtcClient = QBRTCClient.getInstance(getApplicationContext());
+            QBRTCSession newQbRtcSession = qbrtcClient.createNewSessionWithOpponents(opponentsList, conferenceType);
+            WebRtcSessionManager.getInstance(this).setCurrentSession(newQbRtcSession);
+            ArrayList<Integer> recipients = new ArrayList<Integer>();
+            recipients.add(opponentId);
+           // PushNotificationSender.sendPushMessage(recipients, qbUser.getId() + "");
+            mProgressDialog.dismiss();
+            CallActivity.start(this, false, sendList, opponentId);
+
+        }
+    }
+
+
+
+
+
+
 
 
     private ArrayList<Integer> getIds() {
@@ -641,11 +787,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return list;
     }
 
+    private ArrayList<Integer> getIds(List<QBUser>qbList) {
+        ArrayList<Integer> list = new ArrayList<>();
+        for (int i = 0; i < qbList.size(); i++) {
+            list.add(qbList.get(i).getId());
+        }
+        return list;
+    }
 
     private void removeId(int id, ArrayList<Integer> list) {
         if (list.size() > 1) {
             for (int i = 0; i < list.size(); i++) {
-                if (list.get(i) == id) {
+                if (list.get(i) == id || list.get(i) == qbUser.getId()) {
                     list.remove(i);
 
                 }
@@ -653,6 +806,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
     }
+
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

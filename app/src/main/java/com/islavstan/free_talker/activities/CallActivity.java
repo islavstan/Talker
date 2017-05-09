@@ -26,6 +26,7 @@ import com.islavstan.free_talker.call_functions.fragments.FragmentExecutor;
 import com.islavstan.free_talker.call_functions.fragments.IncomeCallFragment;
 import com.islavstan.free_talker.call_functions.fragments.IncomeCallFragmentCallbackListener;
 import com.islavstan.free_talker.call_functions.fragments.OnCallEventsController;
+import com.islavstan.free_talker.gcm.PushNotificationSender;
 import com.islavstan.free_talker.utils.Consts;
 import com.islavstan.free_talker.utils.PreferenceHelper;
 import com.islavstan.free_talker.utils.RingtonePlayer;
@@ -103,6 +104,7 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
     List<Integer> usersList;
     int opponentId;
     private AdView mAdView;
+    QBUser qbUser;
 
     public static void start(Context context, boolean isIncomingCall, ArrayList<Integer> list, int opponentId) {
         Intent intent = new Intent(context, CallActivity.class);
@@ -131,12 +133,13 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
         preferenceHelper = PreferenceHelper.getInstance();
         preferenceHelper.init(getApplicationContext());
 
+        qbUser = preferenceHelper.getQbUser();
+
         parseIntentExtras();
 
         sessionManager = WebRtcSessionManager.getInstance(this);
         if (!currentSessionExist()) {
             finish();
-            Log.d(TAG, "finish CallActivity");
             return;
         }
         initFields();
@@ -411,7 +414,7 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
     @Override
     protected void onPause() {
         super.onPause();
-        App.setAppOpen(false);
+       // App.setAppOpen(false);
         //  networkConnectionChecker.unregisterListener(this);
     }
 
@@ -527,6 +530,17 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
                 WebRtcSessionManager.getInstance(this).setCurrentSession(newQbRtcSession);
                 initCurrentSession(newQbRtcSession);
                 initQBRTCClient();
+
+
+
+
+                ArrayList<Integer> recipients = new ArrayList<Integer>();
+                recipients.add(opponentId);
+               // PushNotificationSender.sendPushMessage(recipients, qbUser.getId()+"");
+
+
+
+
                 EventBus.getDefault().post(new CallEvent());
             } else {
                 Toast.makeText(this, R.string.no_users_online, Toast.LENGTH_LONG).show();

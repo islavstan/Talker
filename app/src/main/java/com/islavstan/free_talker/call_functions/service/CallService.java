@@ -55,21 +55,18 @@ public  class CallService extends Service {
 
     public static void start(Context context, QBUser qbUser) {
         start(context, qbUser, null);
-        Log.d(TAG, "qbUser get Login = "+qbUser.getLogin()+qbUser.getId()+qbUser.getPassword());
+        Log.d(TAG, "qbUser get Login = " + qbUser.getLogin() + qbUser.getId() + qbUser.getPassword());
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-
         createChatService();
 
-        Log.d(TAG, "Service onCreate()");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "Service started");
         parseIntentExtras(intent);
         startSuitableActions();
         return START_REDELIVER_INTENT;
@@ -143,34 +140,33 @@ public  class CallService extends Service {
     }
 
     private void initQBRTCClient() {
-      Log.d("stas", chatService.isLoggedIn()+" chatService.isLoggedIn()");
-            rtcClient = QBRTCClient.getInstance(getApplicationContext());
-            // Add signalling manager
-            chatService.getVideoChatWebRTCSignalingManager().addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
-                @Override
-                public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
-                    Log.d("CALL_LOG", "addSignaling = " + createdLocally);
-                    if (!createdLocally) {
+        rtcClient = QBRTCClient.getInstance(getApplicationContext());
+        // Add signalling manager
+        chatService.getVideoChatWebRTCSignalingManager().addSignalingManagerListener(new QBVideoChatSignalingManagerListener() {
+            @Override
+            public void signalingCreated(QBSignaling qbSignaling, boolean createdLocally) {
+                Log.d("CALL_LOG", "addSignaling = " + createdLocally);
+                if (!createdLocally) {
 
-                        rtcClient.addSignaling((QBWebRTCSignaling) qbSignaling);
-                    }
+                    rtcClient.addSignaling((QBWebRTCSignaling) qbSignaling);
                 }
-            });
+            }
+        });
 
-            // Configure
-            QBRTCConfig.setDebugEnabled(true);
+        // Configure
+        QBRTCConfig.setDebugEnabled(true);
 
 
-            // Add service as callback to RTCClient
-            Log.d(TAG, "prepareToProcessCalls");
-            rtcClient.addSessionCallbacksListener(WebRtcSessionManager.getInstance(this));
-            rtcClient.prepareToProcessCalls();
-        }
+        // Add service as callback to RTCClient
+
+        rtcClient.addSessionCallbacksListener(WebRtcSessionManager.getInstance(this));
+        rtcClient.prepareToProcessCalls();
+    }
 
 
     private void sendResultToActivity(boolean isSuccess, String errorMessage) {
         if (pendingIntent != null) {
-            Log.d(TAG, "sendResultToActivity()");
+
             try {
                 Intent intent = new Intent();
                 intent.putExtra(Consts.EXTRA_LOGIN_RESULT, isSuccess);
@@ -183,9 +179,7 @@ public  class CallService extends Service {
                         ? errorMessageSendingResult
                         : "Error sending result to activity");
             }
-        }
-        else
-        {
+        } else {
             Log.d(TAG, "pendingIntent = null");
         }
     }
@@ -224,36 +218,21 @@ public  class CallService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "Service onDestroy()");
+
         super.onDestroy();
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(TAG, "Service onBind)");
         return null;
     }
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        Log.d(TAG, "Service onTaskRemoved()");
         super.onTaskRemoved(rootIntent);
         destroyRtcClientAndChat();
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }

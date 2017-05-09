@@ -16,11 +16,10 @@ import com.quickblox.users.model.QBUser;
 
 public class CallReceiver extends BroadcastReceiver {
     NotificationManager mNotificationManager;
+
     public CallReceiver() {
 
     }
-
-
 
 
     @Override
@@ -28,14 +27,14 @@ public class CallReceiver extends BroadcastReceiver {
         String action = intent.getStringExtra("action");
         PreferenceHelper preferenceHelper = PreferenceHelper.getInstance();
         preferenceHelper.init(context.getApplicationContext());
-         mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         QBUser qbUser = preferenceHelper.getQbUser();
         switch (action) {
             case "Take":
                 CallService.start(context, qbUser);
-                if(App.isAppOnPause()) {
+              /*  if (App.isAppOnPause()) {
                     MainActivity.start(context, true);
-                }
+                }*/
                 mNotificationManager.cancel(100);
                 break;
             case "Reject":
