@@ -24,7 +24,7 @@ public class RingtonePlayer {
         this.context = context;
         mediaPlayer = android.media.MediaPlayer.create(context, resource);
         m_amAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        if (type == 0)//ухо
+        if (type == 0)
             m_amAudioManager.setMode(AudioManager.MODE_IN_CALL);
         else
             m_amAudioManager.setMode(AudioManager.MODE_RINGTONE);

@@ -58,12 +58,10 @@ public class WebRtcSessionManager extends QBRTCClientSessionCallbacksImpl {
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(result -> {
                         if (result == 0) {
+
                             setCurrentSession(session);
                             MainActivity.start(context, true);
 
-                         /*   if (App.isAppOpen() || !App.isAppOnPause()) {
-
-                            }*/
                         } else {
                             Log.d(TAG, "call block user");
                         }

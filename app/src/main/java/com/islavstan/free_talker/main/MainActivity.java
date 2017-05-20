@@ -1,19 +1,25 @@
 package com.islavstan.free_talker.main;
 
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.nfc.Tag;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,7 +40,9 @@ import com.master.permissionhelper.PermissionHelper;
 import com.quickblox.auth.session.QBSettings;
 import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBRestChatService;
+import com.quickblox.chat.listeners.QBChatDialogParticipantListener;
 import com.quickblox.chat.model.QBChatDialog;
+import com.quickblox.chat.model.QBPresence;
 import com.quickblox.core.QBEntityCallback;
 import com.quickblox.core.QBEntityCallbackImpl;
 import com.quickblox.core.ServiceZone;
@@ -50,10 +58,17 @@ import com.quickblox.videochat.webrtc.QBRTCTypes;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
+import org.jsoup.Jsoup;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     String TAG = "stas";
@@ -73,6 +88,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TextView onlineTV;
     List<QBUser> listForOnline = new ArrayList<>();
     List<QBUser> randomListForPush = new ArrayList<>();
+
+
+
+    HashSet<Integer> usersHashSet = new HashSet<>();
 
 
     public static void startActivity(Context context, int flags) {
@@ -102,6 +121,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         internetConnection = InternetConnection.hasConnection(this);
         App.setAppOpen(true);
 
+        checkVersion()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(result -> {
+                            if (result == 0) {
+                                showVersionDialog();
+                            } else {
+                                Log.d(TAG, "checkVersion all ok");
+                            }
+                        }
+                        , error -> Log.d(TAG, "checkVersion error = " + error.getMessage()));
+
+
         mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
@@ -122,7 +154,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         shareBtn = (Button) findViewById(R.id.shareBtn);
         femaleBtn = (Button) findViewById(R.id.femaleBtn);
         lastCallerBtn = (Button) findViewById(R.id.lastCallerBtn);
-
         level1Btn.setOnClickListener(this);
         level2Btn.setOnClickListener(this);
         blockBtn.setOnClickListener(this);
@@ -140,17 +171,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (qbUser != null) {
             CallService.start(MainActivity.this, qbUser);
             signIn(qbUser);
-            Log.d(TAG, qbUser.getId()+" my id");
+
 
         }
 
         if (isRunForCall && webRtcSessionManager.getCurrentSession() != null) {
-            Log.d("stas", "isRunForCall && webRtcSessionManager.getCurrentSession()" );
             CallActivity.start(MainActivity.this, true);
         }
 
 
     }
+
 
     private void refreshOnlineUsers() {
         QBPagedRequestBuilder pagedRequestBuilder = new QBPagedRequestBuilder();
@@ -159,7 +190,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         QBUsers.getUsersByIDs(getOnlineUsersForCount(), pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
             @Override
             public void onSuccess(ArrayList<QBUser> result, Bundle params) {
-                Log.d(TAG, " refreshOnlineUsers  success");
                 int male = 0;
                 int female = 0;
                 listForOnline.clear();
@@ -170,7 +200,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             male++;
                         } else female++;
                     }
-                    Log.d(TAG, "Online:" + " Male " + male + " Female " + female);
                     onlineTV.setText("Online:" + " Male " + male + ", Female " + female);
                 } else onlineTV.setText(R.string.online);
 
@@ -191,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             for (int i = 0; i < allOnlineUsersList.size(); i++) {
                 if (allOnlineUsersList.get(i).getId() == id) {
                     allOnlineUsersList.remove(i);
-                    Log.d(TAG, "delete user with id " + id);
+
                 }
             }
         }
@@ -201,11 +230,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onPause() {
         super.onPause();
-        //  App.setAppOpen(false);
-        // App.setAppOnPause(true);
         if (mAdView != null) {
             mAdView.pause();
         }
+
+
         if (groupChatDialog != null) {
             try {
                 groupChatDialog.leave();
@@ -214,6 +243,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             }
         }
+
+
     }
 
     @Override
@@ -223,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mAdView.resume();
         }
         App.setAppOpen(true);
-      //  App.setAppOnPause(false);
+
     }
 
 
@@ -252,7 +283,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onSuccess(QBUser result, Bundle params) {
                 Log.d(TAG, "onSuccess signIn " + result.getLogin());
                 getChatDialogById();
-                //получаю чат
+
             }
 
             @Override
@@ -277,7 +308,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             @Override
                             public void onSuccess(Object o, Bundle bundle) {
                                 refreshOnlineUsers();
-                                Log.d("stas", "join success");
                                 if (!internetConnection) {
                                     internetConnection = true;
                                     getRandomUser(getOnlineUsers(), callType);
@@ -341,12 +371,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 pagedRequestBuilder.setPage(1);
                 pagedRequestBuilder.setPerPage(50);
 
+
                 QBUsers.getUsersByIDs(onlineUsers, pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
                     @Override
                     public void onSuccess(ArrayList<QBUser> result, Bundle params) {
 
                         switch (type) {
                             case 1:
+
+
                                 allOnlineUsersList.clear();
                                 allOnlineUsersList.addAll(result);
                                 removeUserById(qbUser.getId());
@@ -355,67 +388,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     int min = 0;
                                     int max = allOnlineUsersList.size() - 1;
                                     int randomNum = min + (int) (Math.random() * ((max - min) + 1));
-                                    startCall(allOnlineUsersList.get(randomNum).getId());
-
-                                   /* int minPush = 1;
-                                    int maxPush = 200;
-                                    int randomNumForPush = minPush + (int) (Math.random() * ((maxPush - minPush) + 1));
-
-                                    QBPagedRequestBuilder pagedRequestBuilder = new QBPagedRequestBuilder();
-                                    //поменять тут на рандомное значение
-                                    pagedRequestBuilder.setPage(randomNumForPush);
-                                    pagedRequestBuilder.setPerPage(10);
-                                    QBUsers.getUsers(pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
-                                        @Override
-                                        public void onSuccess(ArrayList<QBUser> users, Bundle params) {
-                                            randomListForPush.clear();
-                                            randomListForPush.addAll(users);
-                                            startCall(allOnlineUsersList.get(randomNum).getId(), randomListForPush);
-
-                                        }
-
-                                        @Override
-                                        public void onError(QBResponseException errors) {
-
-                                        }
-                                    });*/
+                                    startCallRandom(allOnlineUsersList.get(randomNum).getId());
 
 
                                 } else {
                                     Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
                                     mProgressDialog.dismiss();
-                                   /* int minPush = 1;
-                                    int maxPush = 200;
-                                    int randomNumForPush = minPush + (int) (Math.random() * ((maxPush - minPush) + 1));
-
-                                    QBPagedRequestBuilder pagedRequestBuilder = new QBPagedRequestBuilder();
-                                    //поменять тут на рандомное значение
-                                    pagedRequestBuilder.setPage(randomNumForPush);
-                                    pagedRequestBuilder.setPerPage(10);
-                                    QBUsers.getUsers(pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
-                                        @Override
-                                        public void onSuccess(ArrayList<QBUser> users, Bundle params) {
-                                            allOnlineUsersList.clear();
-                                            allOnlineUsersList.addAll(users);
-                                            if(allOnlineUsersList.size()>0) {
-                                                startCall(allOnlineUsersList.get(0).getId());
-                                            } else {
-                                                Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
-                                                  mProgressDialog.dismiss();
-                                            }
-
-                                        }
-
-                                        @Override
-                                        public void onError(QBResponseException errors) {
-
-                                        }
-                                    });
-
-
-                                }*/
-                                    break;
                                 }
+                                break;
 
                             case 2:
                                 allOnlineUsersList.clear();
@@ -434,50 +414,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         int randomNum = min + (int) (Math.random() * ((max - min) + 1));
                                         startCall(allOnlineUsersList.get(randomNum).getId());
 
-                                        /*Log.d(TAG, "max = " + max + " randomNum = " + randomNum + " allOnlineUsersList.size() = " + allOnlineUsersList.size());
 
-                                        int minPush = 1;
-                                        int maxPush = 200;
-                                        int randomNumForPush = minPush + (int) (Math.random() * ((maxPush - minPush) + 1));
-
-                                        QBPagedRequestBuilder pagedRequestBuilder = new QBPagedRequestBuilder();
-                                        //поменять тут на рандомное значение
-                                        pagedRequestBuilder.setPage(randomNumForPush);
-                                        pagedRequestBuilder.setPerPage(10);
-                                        QBUsers.getUsers(pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
-                                            @Override
-                                            public void onSuccess(ArrayList<QBUser> users, Bundle params) {
-                                                randomListForPush.clear();
-                                                randomListForPush.addAll(users);
-                                                if (randomListForPush.size() > 0) {
-                                                    for (int i = 0; i < randomListForPush.size(); i++) {
-                                                        if (randomListForPush.get(i).getTags().size() == 1) {
-                                                            Log.d(TAG, "remove not level 2 users");
-                                                            randomListForPush.remove(i);
-                                                        }
-                                                    }
-
-                                                }
-                                                if (randomListForPush.size() > 0) {
-                                                    startCall(allOnlineUsersList.get(randomNum).getId(), randomListForPush);
-                                                } else
-                                                    startCall(allOnlineUsersList.get(randomNum).getId());
-
-                                            }
-
-                                            @Override
-                                            public void onError(QBResponseException errors) {
-
-                                            }
-                                        });
-
-*/
-                                    } else
+                                    } else {
                                         Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
-                                    mProgressDialog.dismiss();
-                                } else
+                                        mProgressDialog.dismiss();
+                                    }
+                                } else {
                                     Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
-                                mProgressDialog.dismiss();
+                                    mProgressDialog.dismiss();
+                                }
 
                                 break;
 
@@ -503,9 +448,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     mProgressDialog.dismiss();
 
 
-                                } else
+                                } else {
                                     Toast.makeText(MainActivity.this, R.string.no_users_online, Toast.LENGTH_SHORT).show();
-                                mProgressDialog.dismiss();
+                                    mProgressDialog.dismiss();
+                                }
                                 break;
                         }
 
@@ -577,10 +523,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-
     private List<QBUser> getRandomUsersForPush() {
         QBPagedRequestBuilder pagedRequestBuilder = new QBPagedRequestBuilder();
-        //поменять тут на рандомное значение
         pagedRequestBuilder.setPage(1);
         pagedRequestBuilder.setPerPage(100);
         QBUsers.getUsers(pagedRequestBuilder).performAsync(new QBEntityCallbackImpl<ArrayList<QBUser>>() {
@@ -600,14 +544,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-
-
-
-
     private void callLastCaller() {
         int lastCallerId = preferenceHelper.getInt(PreferenceHelper.LAST_CALLER);
         if (lastCallerId != 0) {
-            startCall(lastCallerId);
+
+            ArrayList<Integer> sendList = new ArrayList<>();
+            ArrayList<Integer> opponentsList = new ArrayList<>();
+            opponentsList.add(lastCallerId);
+            QBRTCTypes.QBConferenceType conferenceType = QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_AUDIO;
+            QBRTCClient qbrtcClient = QBRTCClient.getInstance(getApplicationContext());
+            QBRTCSession newQbRtcSession = qbrtcClient.createNewSessionWithOpponents(opponentsList, conferenceType);
+            WebRtcSessionManager.getInstance(this).setCurrentSession(newQbRtcSession);
+            mProgressDialog.dismiss();
+            CallActivity.start(this, false, sendList, lastCallerId, 2);
         } else Toast.makeText(this, R.string.need_conversation, Toast.LENGTH_SHORT).show();
 
 
@@ -738,21 +687,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             QBRTCClient qbrtcClient = QBRTCClient.getInstance(getApplicationContext());
             QBRTCSession newQbRtcSession = qbrtcClient.createNewSessionWithOpponents(opponentsList, conferenceType);
             WebRtcSessionManager.getInstance(this).setCurrentSession(newQbRtcSession);
-            ArrayList<Integer> recipients = new ArrayList<Integer>();
-            recipients.add(opponentId);
-            PushNotificationSender.sendPushMessage(recipients, qbUser.getId()+"");
             mProgressDialog.dismiss();
-
-
-
-            CallActivity.start(this, false, sendList, opponentId);
+            CallActivity.start(this, false, sendList, opponentId, 2);
 
         }
     }
 
 
+    private void startCallRandom(int opponentId) {
+        if (isLoggedInChat(opponentId)) {
+            ArrayList<Integer> sendList = new ArrayList<>();
+            ArrayList<Integer> opponentsList = new ArrayList<>();
+            opponentsList.add(opponentId);
+            QBRTCTypes.QBConferenceType conferenceType = QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_AUDIO;
+            QBRTCClient qbrtcClient = QBRTCClient.getInstance(getApplicationContext());
+            QBRTCSession newQbRtcSession = qbrtcClient.createNewSessionWithOpponents(opponentsList, conferenceType);
+            WebRtcSessionManager.getInstance(this).setCurrentSession(newQbRtcSession);
+            mProgressDialog.dismiss();
+            CallActivity.start(this, false, sendList, opponentId, 1);
 
-    private void startCall(int opponentId, List<QBUser>pushList) {
+        }
+    }
+
+
+    private void startCall(int opponentId, List<QBUser> pushList) {
         if (isLoggedInChat(opponentId)) {
             ArrayList<Integer> sendList = getIds();
             sendList.addAll(getIds(pushList));
@@ -763,20 +721,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             QBRTCClient qbrtcClient = QBRTCClient.getInstance(getApplicationContext());
             QBRTCSession newQbRtcSession = qbrtcClient.createNewSessionWithOpponents(opponentsList, conferenceType);
             WebRtcSessionManager.getInstance(this).setCurrentSession(newQbRtcSession);
-            ArrayList<Integer> recipients = new ArrayList<Integer>();
-            recipients.add(opponentId);
-           // PushNotificationSender.sendPushMessage(recipients, qbUser.getId() + "");
+
             mProgressDialog.dismiss();
-            CallActivity.start(this, false, sendList, opponentId);
+            CallActivity.start(this, false, sendList, opponentId, 2);
 
         }
     }
-
-
-
-
-
-
 
 
     private ArrayList<Integer> getIds() {
@@ -787,7 +737,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return list;
     }
 
-    private ArrayList<Integer> getIds(List<QBUser>qbList) {
+    private ArrayList<Integer> getIds(List<QBUser> qbList) {
         ArrayList<Integer> list = new ArrayList<>();
         for (int i = 0; i < qbList.size(); i++) {
             list.add(qbList.get(i).getId());
@@ -808,7 +758,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -827,6 +776,60 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 CallActivity.start(MainActivity.this, true);
             }
         }
+    }
+
+
+    public Observable<Integer> checkVersion() {
+        return Observable.fromCallable(() -> {
+            String newVersion = null;
+            int result = 1;
+            if (InternetConnection.hasConnection(this)) {
+                try {
+                    newVersion = Jsoup.connect("https://play.google.com/store/apps/details?id=" + getPackageName())
+                            .timeout(30000)
+                            .userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
+                            .referrer("http://www.google.com")
+                            .get()
+                            .select("div[itemprop=softwareVersion]")
+                            .first()
+                            .ownText();
+                } catch (IOException e) {
+                    Log.d(TAG, "IOException" + e.getMessage());
+                }
+                PackageInfo pInfo = null;
+                try {
+                    pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+                } catch (PackageManager.NameNotFoundException e) {
+                    Log.d(TAG, "PackageManager = " + e.getMessage());
+                }
+                if (pInfo != null && newVersion != null) {
+                    String version = pInfo.versionName;
+
+                    if (!newVersion.equals(version)) {
+                        result = 0;
+                    }
+                }
+            } else result = 1;
+
+
+            return result;
+        });
+
+
+    }
+
+    private void showVersionDialog() {
+        View dialog = LayoutInflater.from(this).inflate(R.layout.dialof_for_new_version, null);
+        final AlertDialog alertD = new AlertDialog.Builder(MainActivity.this).create();
+        RelativeLayout updateButton = (RelativeLayout) dialog.findViewById(R.id.button);
+        updateButton.setOnClickListener(v -> {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName())));
+            MainActivity.this.finish();
+        });
+
+        alertD.setView(dialog);
+        alertD.setCancelable(false);
+        alertD.show();
     }
 
 

@@ -27,11 +27,18 @@ import com.islavstan.free_talker.call_functions.fragments.IncomeCallFragment;
 import com.islavstan.free_talker.call_functions.fragments.IncomeCallFragmentCallbackListener;
 import com.islavstan.free_talker.call_functions.fragments.OnCallEventsController;
 import com.islavstan.free_talker.gcm.PushNotificationSender;
+import com.islavstan.free_talker.utils.Constants;
 import com.islavstan.free_talker.utils.Consts;
 import com.islavstan.free_talker.utils.PreferenceHelper;
 import com.islavstan.free_talker.utils.RingtonePlayer;
 import com.islavstan.free_talker.utils.WebRtcSessionManager;
 import com.quickblox.chat.QBChatService;
+import com.quickblox.chat.QBRestChatService;
+import com.quickblox.chat.listeners.QBChatDialogParticipantListener;
+import com.quickblox.chat.model.QBChatDialog;
+import com.quickblox.chat.model.QBPresence;
+import com.quickblox.core.QBEntityCallback;
+import com.quickblox.core.exception.QBResponseException;
 import com.quickblox.users.model.QBUser;
 import com.quickblox.videochat.webrtc.AppRTCAudioManager;
 import com.quickblox.videochat.webrtc.QBRTCClient;
@@ -47,10 +54,12 @@ import com.quickblox.videochat.webrtc.exception.QBRTCSignalException;
 
 import org.greenrobot.eventbus.EventBus;
 import org.jivesoftware.smack.AbstractConnectionListener;
+import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.webrtc.CameraVideoCapturer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -105,12 +114,23 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
     int opponentId;
     private AdView mAdView;
     QBUser qbUser;
+    int callType;
 
-    public static void start(Context context, boolean isIncomingCall, ArrayList<Integer> list, int opponentId) {
+
+
+
+    HashSet<Integer> usersHashSet = new HashSet<>();
+    private QBChatDialogParticipantListener participantListener;
+
+
+
+
+    public static void start(Context context, boolean isIncomingCall, ArrayList<Integer> list, int opponentId, int type) {
         Intent intent = new Intent(context, CallActivity.class);
         intent.putExtra(Consts.EXTRA_IS_INCOMING_CALL, isIncomingCall);
         intent.putExtra("USERS", list);
         intent.putExtra("CALL_ID", opponentId);
+        intent.putExtra("type", type);
         context.startActivity(intent);
     }
 
@@ -147,14 +167,71 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
 
         initQBRTCClient();
         initAudioManager();
-        //initWiFiManagerListener();
 
-        ringtonePlayer = new RingtonePlayer(this, R.raw.calling, 0);
+
+        ringtonePlayer = new RingtonePlayer(this, R.raw.trance, 0);
 
 
         startSuitableFragment(isInCommingCall);
 
+
+        getChatDialogById();
+
+        participantListener = new QBChatDialogParticipantListener() {
+            @Override
+            public void processPresence(String dialogId, QBPresence qbPresence) {
+                if (QBPresence.Type.online.equals(qbPresence.getType())){
+                    usersHashSet.add(qbPresence.getUserId());
+
+                } else {
+                    usersHashSet.remove(qbPresence.getUserId());
+
+                }
+            }
+        };
+
+
+
     }
+
+
+
+
+    private void getChatDialogById() {
+        QBRestChatService.getChatDialogById(Constants.GROUP_DIALOG_ID).performAsync(
+                new QBEntityCallback<QBChatDialog>() {
+                    @Override
+                    public void onSuccess(QBChatDialog dialog, Bundle params) {
+
+                        //присоединяемся к чату
+                        QBChatDialog groupChatDialog = dialog;
+                        DiscussionHistory discussionHistory = new DiscussionHistory();
+                        discussionHistory.setMaxStanzas(0);
+                        groupChatDialog.join(discussionHistory, new QBEntityCallback() {
+                            @Override
+                            public void onSuccess(Object o, Bundle bundle) {
+
+                                groupChatDialog.addParticipantListener(participantListener);
+
+                            }
+
+                            @Override
+                            public void onError(QBResponseException e) {
+                                Log.d(TAG, "error join  " + e.getMessage());
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(QBResponseException responseException) {
+                        Log.d(TAG, "error getChatDialogById  " + responseException.getMessage());
+                    }
+                });
+    }
+
+
+
+
 
 
     private void startSuitableFragment(boolean isInComingCall) {
@@ -187,6 +264,7 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
         if (getIntent().getExtras().getIntegerArrayList("USERS") != null) {
             usersList = getIntent().getExtras().getIntegerArrayList("USERS");
             opponentId = getIntent().getExtras().getInt("CALL_ID");
+            callType = getIntent().getExtras().getInt("type");
         }
 
 
@@ -311,7 +389,7 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
         // Configure
         //
         QBRTCConfig.setMaxOpponentsCount(Consts.MAX_OPPONENTS_COUNT);
-        QBRTCConfig.setAnswerTimeInterval(25);
+        QBRTCConfig.setAnswerTimeInterval(7);
         QBRTCConfig.setDebugEnabled(true);
 
 
@@ -408,14 +486,13 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
     protected void onResume() {
         super.onResume();
         App.setAppOpen(true);
-        //  networkConnectionChecker.registerListener(this);
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-       // App.setAppOpen(false);
-        //  networkConnectionChecker.unregisterListener(this);
+
     }
 
     @Override
@@ -449,7 +526,7 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
         }
     }
 
-    // ---------------Chat callback methods implementation  ----------------------//
+
 
     @Override
     public void onReceiveNewSession(final QBRTCSession session) {
@@ -463,7 +540,7 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
         if (!session.equals(getCurrentSession())) {
             return;
         }
-        //ringtonePlayer.stop();
+
     }
 
     @Override
@@ -514,45 +591,77 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
         Log.d(TAG, "onConnectedToUser() is started");
     }
 
+
+
+    private void  deleteFromHash(int id){
+        usersHashSet.remove(opponentId);
+    }
+
+
+
     @Override
     public void onSessionClosed(final QBRTCSession session) {
 
         if (!callAccept && !isInCommingCall) {
-            removeId(opponentId, usersList);
-            if (usersList.size() > 0) {
-                releaseCurrentSession();
-                opponentId = usersList.get(0);
-                ArrayList<Integer> opponentsList = new ArrayList<>();
-                opponentsList.add(opponentId);
-                QBRTCTypes.QBConferenceType conferenceType = QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_AUDIO;
-                QBRTCClient qbrtcClient = QBRTCClient.getInstance(getApplicationContext());
-                QBRTCSession newQbRtcSession = qbrtcClient.createNewSessionWithOpponents(opponentsList, conferenceType);
-                WebRtcSessionManager.getInstance(this).setCurrentSession(newQbRtcSession);
-                initCurrentSession(newQbRtcSession);
-                initQBRTCClient();
-
-
-
-
-                ArrayList<Integer> recipients = new ArrayList<Integer>();
-                recipients.add(opponentId);
-               // PushNotificationSender.sendPushMessage(recipients, qbUser.getId()+"");
-
-
-
-
-                EventBus.getDefault().post(new CallEvent());
-            } else {
-                Toast.makeText(this, R.string.no_users_online, Toast.LENGTH_LONG).show();
-                if (session.equals(getCurrentSession())) {
-                    ringtonePlayer.stop();
-                    if (audioManager != null) {
-                        audioManager.close();
-                    }
+            if (callType == 1) {
+                deleteFromHash(opponentId);
+                if (usersHashSet.size() > 0) {
                     releaseCurrentSession();
+                    for (int id : usersHashSet) {
+                        opponentId = id;
+                        break;
+                    }
+                    ArrayList<Integer> opponentsList = new ArrayList<>();
+                    opponentsList.add(opponentId);
+                    QBRTCTypes.QBConferenceType conferenceType = QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_AUDIO;
+                    QBRTCClient qbrtcClient = QBRTCClient.getInstance(getApplicationContext());
+                    QBRTCSession newQbRtcSession = qbrtcClient.createNewSessionWithOpponents(opponentsList, conferenceType);
+                    WebRtcSessionManager.getInstance(this).setCurrentSession(newQbRtcSession);
+                    initCurrentSession(newQbRtcSession);
+                    initQBRTCClient();
+                    EventBus.getDefault().post(new CallEvent());
 
-                    closeByWifiStateAllow = true;
-                    finish();
+                } else {
+                    Toast.makeText(this, R.string.no_users_online, Toast.LENGTH_LONG).show();
+                    if (session.equals(getCurrentSession())) {
+                        ringtonePlayer.stop();
+                        if (audioManager != null) {
+                            audioManager.close();
+                        }
+                        releaseCurrentSession();
+
+                        closeByWifiStateAllow = true;
+                        finish();
+                    }
+                }
+            } else {
+
+                removeId(opponentId, usersList);
+                if (usersList.size() > 0) {
+                    releaseCurrentSession();
+                    opponentId = usersList.get(0);
+                    ArrayList<Integer> opponentsList = new ArrayList<>();
+                    opponentsList.add(opponentId);
+                    QBRTCTypes.QBConferenceType conferenceType = QBRTCTypes.QBConferenceType.QB_CONFERENCE_TYPE_AUDIO;
+                    QBRTCClient qbrtcClient = QBRTCClient.getInstance(getApplicationContext());
+                    QBRTCSession newQbRtcSession = qbrtcClient.createNewSessionWithOpponents(opponentsList, conferenceType);
+                    WebRtcSessionManager.getInstance(this).setCurrentSession(newQbRtcSession);
+                    initCurrentSession(newQbRtcSession);
+                    initQBRTCClient();
+                    EventBus.getDefault().post(new CallEvent());
+
+                } else {
+                    Toast.makeText(this, R.string.no_users_online, Toast.LENGTH_LONG).show();
+                    if (session.equals(getCurrentSession())) {
+                        ringtonePlayer.stop();
+                        if (audioManager != null) {
+                            audioManager.close();
+                        }
+                        releaseCurrentSession();
+
+                        closeByWifiStateAllow = true;
+                        finish();
+                    }
                 }
             }
 
@@ -569,6 +678,10 @@ public class CallActivity extends AppCompatActivity  implements QBRTCClientSessi
             }
         }
     }
+
+
+
+
 
 
     @Override

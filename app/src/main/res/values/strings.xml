@@ -51,6 +51,16 @@
     <string name="need_conversation">You can use this function after the next conversation</string>
 
 
+
+    <string name="update">Update</string>
+    <string name="update_text">Please update your IELTS Live Speaking
+Before using for better quality and new features!</string>
+
+
+
+
+
+
     <string-array name="sex_array">
         <item>Male</item>
         <item>Female</item>

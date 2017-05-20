@@ -32,18 +32,7 @@ public class GcmPushListenerService extends GcmListenerService {
 
     @Override
     public void onMessageReceived(String from, Bundle data) {
-        String message = data.getString(GcmConsts.EXTRA_GCM_MESSAGE);
-        if(!App.isAppOpen()) {
-            dbHelper = DBHelper.getInstance(getApplicationContext());
-            dbHelper.getBlockUser(Integer.parseInt(message))
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(result -> {
-                        if (result == 0) {
-                            showNotification();
-                        }
-                    }, error -> Log.d(TAG, "getBlockUser error = " + error));
-        }
+
 
     }
 

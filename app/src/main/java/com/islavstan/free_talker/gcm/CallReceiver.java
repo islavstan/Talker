@@ -32,9 +32,6 @@ public class CallReceiver extends BroadcastReceiver {
         switch (action) {
             case "Take":
                 CallService.start(context, qbUser);
-              /*  if (App.isAppOnPause()) {
-                    MainActivity.start(context, true);
-                }*/
                 mNotificationManager.cancel(100);
                 break;
             case "Reject":
